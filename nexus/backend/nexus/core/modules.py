@@ -133,11 +133,19 @@ MODULES: list[ModuleDefinition] = [
         name="Economic Laboratory",
         summary="Simulazioni Monte Carlo, sensitività, regressioni e backtesting senza look-ahead bias.",
         phase=6,
-        status="in_preparation",
+        status="available",
         planned_features=[
             "Ogni simulazione dichiara ipotesi, variabili, parametri, metodo, dati, risultati e limiti",
             "Backtesting con dati disponibili all'epoca (no look-ahead, no survivorship bias)",
             "Scenari controfattuali etichettati come ipotesi",
+        ],
+        implemented_features=[
+            "Monte Carlo (moto browniano geometrico) e bootstrap a blocchi su rendimenti storici",
+            "Dinamica del debito pubblico con rifinanziamento graduale, shock sui tassi, crisi e incertezza stocastica",
+            "Analisi di sensitività (tornado), scenari di inflazione, confronto tra regole di Taylor",
+            "Regressione OLS con errori HAC, avvisi su regressioni spurie e ricampionamento esplicito",
+            "Backtesting con segnale applicato al periodo successivo (no look-ahead), costi e avvisi su sopravvivenza e revisioni",
+            "Ogni simulazione dichiara ipotesi, variabili, parametri, metodo, dati, risultati e limiti; i controfattuali sono etichettati",
         ],
     ),
     ModuleDefinition(

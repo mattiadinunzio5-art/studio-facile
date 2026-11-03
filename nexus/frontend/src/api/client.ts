@@ -1,4 +1,6 @@
 import type {
+  SimulationRun,
+  SimulationSummary,
   ResearchRun,
   RunSummary,
   Analysis,
@@ -196,4 +198,10 @@ export const api = {
   createRun: (data: { question: string; series_ids?: number[]; project_id?: number | null }) => request<ResearchRun>('/research/runs', json('POST', data)),
   decideRun: (id: number, data: { decision: 'approve' | 'reject'; note?: string; accepted_relations?: number[] }) =>
     request<ResearchRun>(`/research/runs/${id}/decision`, json('POST', data)),
+
+  // Fase 6
+  runSimulation: (kind: string, data: Record<string, unknown>) => request<SimulationRun>(`/lab/simulations/${kind}`, json('POST', data)),
+  simulations: () => request<SimulationSummary[]>('/lab/simulations'),
+  simulation: (id: number) => request<SimulationRun>(`/lab/simulations/${id}`),
+  deleteSimulation: (id: number) => request<void>(`/lab/simulations/${id}?confirm=true`, { method: 'DELETE' }),
 };

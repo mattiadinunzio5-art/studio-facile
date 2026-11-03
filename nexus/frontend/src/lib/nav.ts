@@ -38,7 +38,7 @@ export const MODULE_NAV: NavItem[] = [
   { to: '/time-machine', label: 'Time Machine', icon: History, code: 'C', moduleId: 'time-machine' },
   { to: '/graph', label: 'Knowledge Graph', icon: Network, code: 'D', moduleId: 'knowledge-graph' },
   { to: '/war-room', moduleId: 'war-room', label: 'Research War Room', icon: Swords, code: 'E' },
-  { to: '/modules/economic-lab', moduleId: 'economic-lab', label: 'Economic Laboratory', icon: FlaskConical, code: 'F', phase: 6 },
+  { to: '/lab', moduleId: 'economic-lab', label: 'Economic Laboratory', icon: FlaskConical, code: 'F' },
   { to: '/modules/research-studio', moduleId: 'research-studio', label: 'Research Studio', icon: BookOpenText, code: 'G', phase: 7 },
   { to: '/modules/business', moduleId: 'business', label: 'NEXUS Business', icon: Briefcase, code: 'H', phase: 8 },
 ];

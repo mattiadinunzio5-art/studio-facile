@@ -26,6 +26,7 @@ EXPECTED_TABLES = {
     "credentials",
     "research_runs",
     "agent_steps",
+    "simulation_runs",
 }
 
 

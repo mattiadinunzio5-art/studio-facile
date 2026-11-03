@@ -569,3 +569,23 @@ export interface ResearchRun {
 }
 
 export interface RunSummary { id: number; question: string; status: ResearchRun['status']; mode: string; provider: string; created_at: string }
+
+// --- Fase 6: Economic Laboratory ----------------------------------------------------------
+
+export interface SimulationEnvelope {
+  kind: string;
+  title: string;
+  hypotheses: string[];
+  variables: Record<string, string>;
+  parameters: Record<string, unknown>;
+  method: string;
+  data_used: string[];
+  results: Record<string, unknown>;
+  limitations: string[];
+  counterfactual: boolean;
+  label: string;
+  warnings: string[];
+}
+
+export interface SimulationRun { id: number; kind: string; title: string; params: Record<string, unknown>; result: SimulationEnvelope; counterfactual: boolean; created_at: string }
+export interface SimulationSummary { id: number; kind: string; title: string; counterfactual: boolean; created_at: string }

@@ -6,6 +6,7 @@ from .connector import ConnectorState
 from .finance import Credential, Observation, Series
 from .document import Document, DocumentChunk
 from .graph import Entity, Relation
+from .lab import SimulationRun
 from .history import EventSource, HistoricalEvent, KnowledgeItem
 from .notification import Notification
 from .preference import UserPreference
@@ -32,6 +33,7 @@ __all__ = [
     "Notification",
     "Project",
     "SearchQuery",
+    "SimulationRun",
     "Source",
     "User",
     "UserPreference",
