@@ -12,6 +12,10 @@ EXPECTED_TABLES = {
     "connector_states",
     "user_preferences",
     "alembic_version",
+    "documents",
+    "document_chunks",
+    "sources",
+    "chunks_fts",
 }
 
 
@@ -54,6 +58,10 @@ def test_orm_matches_migrations(tmp_path):
 
     url = f"sqlite:///{tmp_path / 'm.db'}"
     upgrade_to_head(url)
+    def include(obj, name, type_, *_):
+        return not (type_ == "table" and name.startswith("chunks_fts"))
+
     with create_engine(url).connect() as conn:
-        diff = compare_metadata(MigrationContext.configure(conn), Base.metadata)
+        ctx = MigrationContext.configure(conn, opts={"include_object": include})
+        diff = compare_metadata(ctx, Base.metadata)
     assert diff == []

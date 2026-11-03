@@ -1,0 +1,4 @@
+# FACOLTATIVO: embedding neurali locali (NEXUS_EMBEDDINGS=sentence-transformers).
+# Scarica PyTorch (~centinaia di MB) e, al primo uso, il modello da Hugging Face.
+# Senza questo file NEXUS usa l'indice semantico LSA (TF-IDF + SVD) di scikit-learn.
+sentence-transformers>=3.0

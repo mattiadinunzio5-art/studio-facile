@@ -1,4 +1,10 @@
 import type {
+  AskResult,
+  Chunk,
+  DocumentInfo,
+  RetrievalResult,
+  Source,
+  SourceInput,
   Activity,
   Connector,
   Dashboard,
@@ -26,12 +32,24 @@ export class ApiError extends Error {
 
 const BASE = '/api';
 
+/** Query string dai soli parametri valorizzati. */
+export function qs(params: Record<string, string | number | boolean | undefined | null>): string {
+  const p = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== null && v !== '') p.set(k, String(v));
+  const s = p.toString();
+  return s ? `?${s}` : '';
+}
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   let res: Response;
   try {
     res = await fetch(BASE + path, {
       ...init,
-      headers: init.body ? { 'Content-Type': 'application/json', ...init.headers } : init.headers,
+      credentials: 'same-origin',
+      headers:
+        init.body && !(init.body instanceof FormData)
+          ? { 'Content-Type': 'application/json', ...init.headers }
+          : init.headers,
     });
   } catch {
     throw new ApiError(0, 'network_error', 'Backend non raggiungibile. Verifica che il server NEXUS sia avviato.');
@@ -81,4 +99,26 @@ export const api = {
   checkConnector: (id: string) => request<Connector>(`/connectors/${encodeURIComponent(id)}/check`, { method: 'POST' }),
 
   search: (q: string) => request<SearchResult>(`/search?q=${encodeURIComponent(q)}`),
+
+  // Fase 2
+  documents: (params: { project_id?: number; category?: string } = {}) => request<DocumentInfo[]>(`/documents${qs(params)}`),
+  document: (id: number) => request<DocumentInfo>(`/documents/${id}`),
+  uploadDocument: (form: FormData) => request<DocumentInfo>('/documents', { method: 'POST', body: form }),
+  importGutenberg: (data: { ebook_id: number; title: string; author: string }) =>
+    request<DocumentInfo>('/documents/gutenberg', json('POST', data)),
+  updateDocument: (id: number, data: Partial<DocumentInfo>) => request<DocumentInfo>(`/documents/${id}`, json('PATCH', data)),
+  deleteDocument: (id: number) => request<void>(`/documents/${id}?confirm=true`, { method: 'DELETE' }),
+  chunks: (id: number, offset = 0, limit = 50) => request<Chunk[]>(`/documents/${id}/chunks?offset=${offset}&limit=${limit}`),
+  documentFileUrl: (id: number) => `${BASE}/documents/${id}/file`,
+
+  sources: (q?: string) => request<Source[]>(`/sources${qs({ q })}`),
+  createSource: (data: Partial<SourceInput>) => request<Source>('/sources', json('POST', data)),
+  updateSource: (id: number, data: Partial<SourceInput>) => request<Source>(`/sources/${id}`, json('PUT', data)),
+  verifySource: (id: number, method: 'user' | 'registry', note = '') =>
+    request<Source>(`/sources/${id}/verify`, json('POST', { method, note })),
+  deleteSource: (id: number) => request<void>(`/sources/${id}?confirm=true`, { method: 'DELETE' }),
+
+  researchSearch: (q: string, mode = 'hybrid', limit = 10) =>
+    request<RetrievalResult>(`/research/search${qs({ q, mode, limit })}`),
+  ask: (question: string, document_ids?: number[]) => request<AskResult>('/research/ask', json('POST', { question, document_ids })),
 };

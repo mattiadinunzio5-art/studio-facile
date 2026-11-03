@@ -52,7 +52,7 @@ export interface SearchQuery {
 }
 
 export interface SearchHit {
-  type: 'project' | 'module';
+  type: 'project' | 'module' | 'document' | 'event' | 'entity' | 'series' | 'report';
   id: string;
   title: string;
   snippet: string;
@@ -147,4 +147,108 @@ export interface Dashboard {
   ai: { mode: 'local' | 'remote'; provider: string; runs: unknown[]; note: string };
   notifications: { unread_count: number; items: Notification[] };
   recent_activity: Activity[];
+}
+
+// --- Fase 2: Research Core ---------------------------------------------------
+
+export type VerificationStatus = 'unverified' | 'verified_user' | 'verified_registry' | 'not_found';
+
+export interface Source {
+  id: number;
+  source_type: string;
+  title: string;
+  authors: string[];
+  year: number | null;
+  publisher: string;
+  container: string;
+  pages: string;
+  doi: string;
+  isbn: string;
+  url: string;
+  accessed_at: string;
+  notes: string;
+  verification_status: VerificationStatus;
+  verification_note: string;
+  verified_at: string | null;
+  is_demo: boolean;
+  citation: string;
+  created_at: string;
+}
+
+export type SourceInput = Omit<Source, 'id' | 'verification_status' | 'verification_note' | 'verified_at' | 'is_demo' | 'citation' | 'created_at'>;
+
+export interface DocumentInfo {
+  id: number;
+  title: string;
+  filename: string;
+  kind: string;
+  category: 'source_material' | 'user_work' | 'dataset';
+  origin: string;
+  origin_url: string;
+  license_note: string;
+  author: string;
+  year: number | null;
+  sha256: string;
+  size_bytes: number;
+  page_count: number | null;
+  char_count: number;
+  chunk_count: number;
+  status: string;
+  error: string | null;
+  flagged_chunks: number;
+  project_id: number | null;
+  source_id: number | null;
+  is_demo: boolean;
+  created_at: string;
+}
+
+export interface Chunk {
+  id: number;
+  ordinal: number;
+  page: number | null;
+  locator: string;
+  text: string;
+  injection_flag: boolean;
+}
+
+export type Support = 'strong' | 'partial' | 'weak' | 'none';
+
+export interface RetrievalHit {
+  chunk_id: number;
+  document_id: number;
+  document_title: string;
+  page: number | null;
+  locator: string;
+  text: string;
+  score: number;
+  support: Support;
+  injection_flag: boolean;
+  source_label: string;
+}
+
+export interface RetrievalResult {
+  query: string;
+  mode: 'hybrid' | 'text' | 'semantic';
+  semantic_engine: string;
+  hits: RetrievalHit[];
+}
+
+export type ClaimType = 'documented_fact' | 'interpretation' | 'hypothesis' | 'estimate' | 'missing';
+
+export interface Claim {
+  type: ClaimType;
+  text: string;
+  support: Support;
+  coverage: number;
+  evidence: number[];
+  note: string;
+}
+
+export interface AskResult {
+  question: string;
+  mode: 'local_extractive' | 'ai_grounded';
+  provider: string;
+  claims: Claim[];
+  passages: RetrievalHit[];
+  disclaimer: string;
 }

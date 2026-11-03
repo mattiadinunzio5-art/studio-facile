@@ -3,7 +3,7 @@ def test_search_finds_projects_and_logs_query(client):
     body = client.get("/api/search?q=gold").json()
     assert [h["type"] for h in body["hits"]] == ["project"]
     # Dichiara gli ambiti non ancora ricercabili invece di simulare risultati.
-    assert any("documenti" in s for s in body["unavailable_scopes"])
+    assert all("documenti" not in s for s in body["unavailable_scopes"])
     recent = client.get("/api/search/recent").json()
     assert recent[0]["query"] == "gold" and recent[0]["results_count"] == 1
 
@@ -29,3 +29,12 @@ def test_recent_searches_are_deduplicated(client):
     for q in ["oro", "argento", "ORO"]:
         client.get(f"/api/search?q={q}")
     assert [s["query"] for s in client.get("/api/search/recent").json()] == ["ORO", "argento"]
+
+
+def test_global_search_includes_documents(client):
+    from .factories import upload
+
+    upload(client, "nota.txt", "Appunti sulla svalutazione della lira nel 1992.".encode())
+    body = client.get("/api/search?q=svalutazione").json()
+    assert any(h["type"] == "document" for h in body["hits"])
+    assert "documenti" in body["searched_scopes"]

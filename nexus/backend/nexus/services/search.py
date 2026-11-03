@@ -12,10 +12,10 @@ from sqlalchemy.orm import Session
 
 from ..api.schemas import SearchHit, SearchResultOut
 from ..core.modules import MODULES
-from ..models import Project, SearchQuery, User
+from ..models import Document, Project, SearchQuery, User
+from ..research import index
 
 UNAVAILABLE_SCOPES = [
-    "documenti (Fase 2)",
     "eventi storici (Fase 3)",
     "entità del Knowledge Graph (Fase 3)",
     "serie finanziarie (Fase 4)",
@@ -62,6 +62,23 @@ def search(db: Session, user: User, query: str, limit: int = 25) -> SearchResult
         )
         for p in projects
     ]
+    doc_ids_seen: set[int] = set()
+    for d in db.scalars(
+        select(Document).where(Document.owner_id == user.id, Document.title.ilike(pattern, escape="\\")).limit(limit)
+    ):
+        doc_ids_seen.add(d.id)
+        hits.append(SearchHit(type="document", id=str(d.id), title=d.title, snippet=f"{d.kind.upper()} · {d.chunk_count} segmenti", url=f"/documents/{d.id}"))
+    for cid, _ in index.text_search(db, user.id, query, 10):
+        from ..models import DocumentChunk
+
+        c = db.get(DocumentChunk, cid)
+        if c is None or c.document_id in doc_ids_seen:
+            continue
+        doc_ids_seen.add(c.document_id)
+        hits.append(
+            SearchHit(type="document", id=str(c.document_id), title=c.document.title + (f" — {c.locator}" if c.locator else ""),
+                      snippet=_snippet(c.text, query), url=f"/documents/{c.document_id}")
+        )
     q = query.lower()
     for m in MODULES:
         if q in m.name.lower() or q in m.summary.lower():
@@ -80,7 +97,7 @@ def search(db: Session, user: User, query: str, limit: int = 25) -> SearchResult
     return SearchResultOut(
         query=query,
         hits=hits,
-        searched_scopes=["progetti", "catalogo moduli"],
+        searched_scopes=["progetti", "documenti", "catalogo moduli"],
         unavailable_scopes=UNAVAILABLE_SCOPES,
     )
 

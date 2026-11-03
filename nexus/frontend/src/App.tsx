@@ -1,6 +1,9 @@
 import { Route, Routes } from 'react-router-dom';
 import { AppShell } from './components/layout/AppShell';
 import { ActivityPage } from './pages/Activity';
+import { BibliographyPage } from './pages/Bibliography';
+import { DocumentDetailPage, DocumentsPage } from './pages/Documents';
+import { ResearchArchivePage } from './pages/ResearchArchive';
 import { DashboardPage } from './pages/Dashboard';
 import { ModulePage } from './pages/ModulePage';
 import { NotFoundPage } from './pages/NotFound';
@@ -24,6 +27,10 @@ export function App() {
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="search" element={<SearchPage />} />
+          <Route path="documents" element={<DocumentsPage />} />
+          <Route path="documents/:documentId" element={<DocumentDetailPage />} />
+          <Route path="bibliography" element={<BibliographyPage />} />
+          <Route path="research" element={<ResearchArchivePage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

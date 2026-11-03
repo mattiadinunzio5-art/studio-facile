@@ -1,6 +1,9 @@
 import {
   Activity,
   Bell,
+  BookMarked,
+  FileText,
+  MessageSquareQuote,
   BookOpenText,
   Briefcase,
   ChartLine,
@@ -40,6 +43,12 @@ export const MODULE_NAV: NavItem[] = [
 ];
 
 export const MAIN_NAV: NavItem[] = [{ to: '/', label: 'Dashboard', icon: LayoutDashboard }];
+
+export const ARCHIVE_NAV: NavItem[] = [
+  { to: '/documents', label: 'Documenti', icon: FileText },
+  { to: '/bibliography', label: 'Bibliografia', icon: BookMarked },
+  { to: '/research', label: "Interroga l'archivio", icon: MessageSquareQuote },
+];
 
 export const WORKSPACE_NAV: NavItem[] = [
   { to: '/projects', label: 'Progetti', icon: FolderKanban },

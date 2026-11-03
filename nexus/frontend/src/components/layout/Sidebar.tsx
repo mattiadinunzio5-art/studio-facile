@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { X } from 'lucide-react';
-import { MAIN_NAV, MODULE_NAV, WORKSPACE_NAV, type NavItem } from '../../lib/nav';
+import { ARCHIVE_NAV, MAIN_NAV, MODULE_NAV, WORKSPACE_NAV, type NavItem } from '../../lib/nav';
 import { useAppState } from '../../state/AppState';
 
 function Item({ item, onNavigate, badge }: { item: NavItem; onNavigate: () => void; badge?: number }) {
@@ -70,6 +70,9 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
         <nav className="flex-1 overflow-y-auto px-2 pb-6 pt-1">
           <Section title="Panoramica">
             {MAIN_NAV.map((i) => <Item key={i.to} item={i} onNavigate={onClose} />)}
+          </Section>
+          <Section title="Archivio">
+            {ARCHIVE_NAV.map((i) => <Item key={i.to} item={i} onNavigate={onClose} />)}
           </Section>
           <Section title="Moduli">
             {MODULE_NAV.map((i) => <Item key={i.to} item={i} onNavigate={onClose} />)}

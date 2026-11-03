@@ -48,7 +48,7 @@ export function mockApi(routes: Record<string, Handler | unknown>) {
   const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
     const method = (init?.method ?? 'GET').toUpperCase();
-    calls.push({ method, url, body: init?.body ? JSON.parse(String(init.body)) : undefined });
+    calls.push({ method, url, body: init?.body && typeof init.body === 'string' ? JSON.parse(init.body) : init?.body });
     const key = Object.keys(routes)
       .filter((k) => {
         const [m, p] = k.split(' ');

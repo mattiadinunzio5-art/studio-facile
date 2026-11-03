@@ -13,6 +13,13 @@ config = context.config
 target_metadata = Base.metadata
 
 
+def include_object(obj, name, type_, reflected, compare_to):
+    # Le tabelle virtuali FTS5 (e le loro tabelle ombra) non sono gestite dall'ORM.
+    if type_ == "table" and name and name.startswith("chunks_fts"):
+        return False
+    return True
+
+
 def _url() -> str:
     return config.get_main_option("sqlalchemy.url") or get_settings().database_url
 
@@ -35,6 +42,7 @@ def run_migrations_online() -> None:
             connection=connection,
             target_metadata=target_metadata,
             render_as_batch=True,  # necessario per ALTER TABLE su SQLite
+            include_object=include_object,
         )
         with context.begin_transaction():
             context.run_migrations()

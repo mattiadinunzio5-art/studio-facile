@@ -128,7 +128,7 @@ class SearchQueryOut(ORMModel):
 
 
 class SearchHit(BaseModel):
-    type: Literal["project", "module"]
+    type: Literal["project", "module", "document", "event", "entity", "series", "report"]
     id: str
     title: str
     snippet: str

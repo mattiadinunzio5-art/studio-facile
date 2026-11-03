@@ -38,9 +38,37 @@ class Settings(BaseSettings):
     # Provider AI: "none" finché l'utente non configura volontariamente credenziali.
     ai_provider: str = "none"
 
+    # Cartella dei dati locali (file importati, cache dei connettori, chiave segreta).
+    data_dir: Path = Field(default=PROJECT_ROOT / "data")
+    max_upload_mb: int = 25
+    # Motore di embedding: "lsa" (predefinito, scikit-learn) o "sentence-transformers".
+    embeddings: Literal["lsa", "sentence-transformers"] = "lsa"
+    embedding_model: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+    # Chiave per cifrare le credenziali salvate (generata in data_dir se assente).
+    secret_key: str | None = None
+    # Cache dei connettori (ore) prima di riscaricare una serie.
+    connector_cache_hours: int = 24
+    # Autenticazione: "local" = utente unico locale; "multi" = account con login.
+    auth_mode: Literal["local", "multi"] = "local"
+    session_hours: int = 24 * 7
+    # Limiti alle operazioni automatiche.
+    max_agent_steps: int = 12
+
     @property
     def is_sqlite(self) -> bool:
         return self.database_url.startswith("sqlite")
+
+    @property
+    def uploads_dir(self) -> Path:
+        return self.data_dir / "uploads"
+
+    @property
+    def cache_dir(self) -> Path:
+        return self.data_dir / "cache"
+
+    @property
+    def exports_dir(self) -> Path:
+        return self.data_dir / "exports"
 
     @property
     def database_label(self) -> str:

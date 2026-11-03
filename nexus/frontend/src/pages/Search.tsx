@@ -5,6 +5,8 @@ import { PageHeader } from '../components/ui/PageHeader';
 import { EmptyState, ErrorBox, Loading } from '../components/ui/States';
 import { useAsync } from '../lib/useAsync';
 
+const HIT_LABEL = { project: 'Progetto', module: 'Modulo', document: 'Documento', event: 'Evento', entity: 'Entità', series: 'Serie', report: 'Rapporto' } as const;
+
 export function SearchPage() {
   const [params] = useSearchParams();
   const q = (params.get('q') ?? '').trim();
@@ -33,7 +35,7 @@ export function SearchPage() {
                 <li key={`${h.type}-${h.id}`}>
                   <Link to={h.url} className="block rounded-lg border border-ink-700 bg-ink-900 p-3 hover:border-gold-500/60">
                     <div className="flex items-center gap-2">
-                      <Badge>{h.type === 'project' ? 'Progetto' : 'Modulo'}</Badge>
+                      <Badge>{HIT_LABEL[h.type]}</Badge>
                       <span className="min-w-0 truncate font-medium text-paper">{h.title}</span>
                     </div>
                     {h.snippet && <p className="mt-1 text-sm text-steel-400">{h.snippet}</p>}

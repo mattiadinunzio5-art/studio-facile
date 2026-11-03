@@ -1,7 +1,4 @@
-# NEXUS backend — Fase 1 (Foundation)
-# Le dipendenze analitiche (pandas, numpy, scipy, statsmodels, scikit-learn,
-# sentence-transformers, faiss/chromadb, networkx, PyMuPDF, python-docx,
-# openpyxl, reportlab) verranno aggiunte nelle fasi in cui sono usate.
+# NEXUS backend — dipendenze runtime (tutte open-source, nessun servizio a pagamento)
 fastapi==0.162.0
 uvicorn[standard]==0.54.0
 pydantic==2.14.2
@@ -9,3 +6,18 @@ pydantic-settings==2.16.2
 sqlalchemy==2.1.7
 alembic==1.20.1
 httpx==0.28.1
+python-multipart==0.0.33
+cryptography==50.0.2
+# Analisi
+pandas==3.1.0
+numpy==2.5.4
+scipy==1.18.1
+statsmodels==0.15.0
+scikit-learn==1.9.1
+networkx==3.7
+# Documenti
+pymupdf==2.1
+python-docx==1.2.0
+openpyxl==3.1.5
+reportlab==5.1.0
+matplotlib==3.11.2
