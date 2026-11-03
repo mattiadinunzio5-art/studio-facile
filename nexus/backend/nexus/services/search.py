@@ -12,12 +12,10 @@ from sqlalchemy.orm import Session
 
 from ..api.schemas import SearchHit, SearchResultOut
 from ..core.modules import MODULES
-from ..models import Document, Project, SearchQuery, User
+from ..models import Document, Entity, HistoricalEvent, Project, SearchQuery, User
 from ..research import index
 
 UNAVAILABLE_SCOPES = [
-    "eventi storici (Fase 3)",
-    "entità del Knowledge Graph (Fase 3)",
     "serie finanziarie (Fase 4)",
     "rapporti (Fase 7)",
 ]
@@ -79,6 +77,18 @@ def search(db: Session, user: User, query: str, limit: int = 25) -> SearchResult
             SearchHit(type="document", id=str(c.document_id), title=c.document.title + (f" — {c.locator}" if c.locator else ""),
                       snippet=_snippet(c.text, query), url=f"/documents/{c.document_id}")
         )
+    for e in db.scalars(
+        select(HistoricalEvent).where(
+            HistoricalEvent.owner_id == user.id,
+            or_(HistoricalEvent.title.ilike(pattern, escape="\\"), HistoricalEvent.description.ilike(pattern, escape="\\")),
+        ).limit(limit)
+    ):
+        hits.append(SearchHit(type="event", id=str(e.id), title=e.title + (" [DEMO]" if e.is_demo else ""),
+                              snippet=_snippet(e.description, query), url=f"/history/events/{e.id}"))
+    for ent in db.scalars(
+        select(Entity).where(Entity.owner_id == user.id, Entity.event_id.is_(None), Entity.name.ilike(pattern, escape="\\")).limit(limit)
+    ):
+        hits.append(SearchHit(type="entity", id=str(ent.id), title=ent.name, snippet=ent.entity_type, url=f"/graph?focus={ent.id}"))
     q = query.lower()
     for m in MODULES:
         if q in m.name.lower() or q in m.summary.lower():
@@ -97,7 +107,7 @@ def search(db: Session, user: User, query: str, limit: int = 25) -> SearchResult
     return SearchResultOut(
         query=query,
         hits=hits,
-        searched_scopes=["progetti", "documenti", "catalogo moduli"],
+        searched_scopes=["progetti", "documenti", "eventi storici", "entità", "catalogo moduli"],
         unavailable_scopes=UNAVAILABLE_SCOPES,
     )
 

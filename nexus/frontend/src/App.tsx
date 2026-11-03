@@ -6,6 +6,9 @@ import { DocumentDetailPage, DocumentsPage } from './pages/Documents';
 import { ResearchArchivePage } from './pages/ResearchArchive';
 import { DashboardPage } from './pages/Dashboard';
 import { ModulePage } from './pages/ModulePage';
+import { EventDetailPage, EventsPage } from './pages/History';
+import { TimeMachinePage } from './pages/TimeMachine';
+import { GraphPage } from './pages/Graph';
 import { NotFoundPage } from './pages/NotFound';
 import { NotificationsPage } from './pages/Notifications';
 import { ProjectsPage } from './pages/Projects';
@@ -31,6 +34,10 @@ export function App() {
           <Route path="documents/:documentId" element={<DocumentDetailPage />} />
           <Route path="bibliography" element={<BibliographyPage />} />
           <Route path="research" element={<ResearchArchivePage />} />
+          <Route path="history" element={<EventsPage />} />
+          <Route path="history/events/:eventId" element={<EventDetailPage />} />
+          <Route path="time-machine" element={<TimeMachinePage />} />
+          <Route path="graph" element={<GraphPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

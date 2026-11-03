@@ -1,4 +1,12 @@
 import type {
+  EntityType,
+  Entity,
+  EventInput,
+  GraphData,
+  HistoricalEvent,
+  KnowledgeItem,
+  Relation,
+  Timeline,
   AskResult,
   Chunk,
   DocumentInfo,
@@ -121,4 +129,34 @@ export const api = {
   researchSearch: (q: string, mode = 'hybrid', limit = 10) =>
     request<RetrievalResult>(`/research/search${qs({ q, mode, limit })}`),
   ask: (question: string, document_ids?: number[]) => request<AskResult>('/research/ask', json('POST', { question, document_ids })),
+
+  // Fase 3
+  events: (params: Record<string, string | number | undefined> = {}) => request<HistoricalEvent[]>(`/history/events${qs(params)}`),
+  event: (id: number) => request<HistoricalEvent>(`/history/events/${id}`),
+  createEvent: (data: EventInput) => request<HistoricalEvent>('/history/events', json('POST', data)),
+  updateEvent: (id: number, data: EventInput) => request<HistoricalEvent>(`/history/events/${id}`, json('PUT', data)),
+  deleteEvent: (id: number) => request<void>(`/history/events/${id}?confirm=true`, { method: 'DELETE' }),
+  linkEventSource: (id: number, source_id: number, pages = '') => request<HistoricalEvent>(`/history/events/${id}/sources`, json('POST', { source_id, pages })),
+  unlinkEventSource: (id: number, source_id: number) => request<HistoricalEvent>(`/history/events/${id}/sources/${source_id}`, { method: 'DELETE' }),
+  addKnowledge: (id: number, data: Omit<KnowledgeItem, 'id'>) => request<HistoricalEvent>(`/history/events/${id}/knowledge`, json('POST', data)),
+  deleteKnowledge: (id: number, itemId: number) => request<HistoricalEvent>(`/history/events/${id}/knowledge/${itemId}`, { method: 'DELETE' }),
+  linkEvents: (id: number, data: Record<string, unknown>) => request<Relation>(`/history/events/${id}/links`, json('POST', data)),
+  timeline: (params: Record<string, string | number | boolean | undefined>) => request<Timeline>(`/history/timeline${qs(params)}`),
+
+  graph: (params: { focus?: number; depth?: number; relation_types?: string[]; provenance?: string[]; entity_types?: string[] }) => {
+    const p = new URLSearchParams();
+    if (params.focus) p.set('focus', String(params.focus));
+    if (params.depth) p.set('depth', String(params.depth));
+    for (const k of ['relation_types', 'provenance', 'entity_types'] as const) for (const v of params[k] ?? []) p.append(k, v);
+    const s = p.toString();
+    return request<GraphData>(`/graph${s ? `?${s}` : ''}`);
+  },
+  graphPath: (source: number, target: number) => request<{ found: boolean; entity_ids: number[]; relations: Relation[] }>(`/graph/path?source=${source}&target=${target}`),
+  entities: (q?: string, entity_type?: EntityType) => request<Entity[]>(`/graph/entities${qs({ q, entity_type })}`),
+  entity: (id: number) => request<Entity>(`/graph/entities/${id}`),
+  createEntity: (data: Partial<Entity>) => request<Entity>('/graph/entities', json('POST', data)),
+  deleteEntity: (id: number) => request<void>(`/graph/entities/${id}?confirm=true`, { method: 'DELETE' }),
+  entityRelations: (id: number) => request<Relation[]>(`/graph/entities/${id}/relations`),
+  createRelation: (data: Record<string, unknown>) => request<Relation>('/graph/relations', json('POST', data)),
+  deleteRelation: (id: number) => request<void>(`/graph/relations/${id}`, { method: 'DELETE' }),
 };

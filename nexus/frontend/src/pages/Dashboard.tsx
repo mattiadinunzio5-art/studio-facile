@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronDown, ChevronUp, Cpu, Eye, EyeOff, Plus, SlidersHorizontal } from 'lucide-react';
 import { api } from '../api/client';
-import type { Dashboard as DashboardData, DashboardLayout, WidgetId } from '../api/types';
+import type { DataSection, Dashboard as DashboardData, DashboardLayout, UnavailableSection, WidgetId } from '../api/types';
 import { SystemSummary } from '../components/SystemSummary';
 import { Badge, DemoBadge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
@@ -11,7 +11,7 @@ import { PageHeader } from '../components/ui/PageHeader';
 import { EmptyState, ErrorBox, Loading, NotAvailable } from '../components/ui/States';
 import { CONNECTOR_STATUS_LABEL, StatusDot } from '../components/ui/StatusDot';
 import { formatDateTime } from '../lib/format';
-import { MODULE_NAV } from '../lib/nav';
+import { MODULE_NAV, moduleRoute } from '../lib/nav';
 import { useAsync } from '../lib/useAsync';
 import { useAppState, useContextPanel } from '../state/AppState';
 
@@ -29,18 +29,40 @@ export const WIDGET_LABELS: Record<WidgetId, string> = {
 
 const WIDE: WidgetId[] = ['modules'];
 
+const MODULE_STATUS = { in_preparation: 'In preparazione', partial: 'Parziale', available: 'Disponibile' } as const;
+
+export function SectionView({ section, empty }: { section: DataSection | UnavailableSection; empty?: string }) {
+  if (!section.available) return <NotAvailable reason={section.reason} phase={section.planned_phase} />;
+  return (
+    <>
+      {section.items.length === 0 ? <EmptyState>{empty ?? 'Nessun elemento.'}</EmptyState> : (
+        <ul className="space-y-1.5">
+          {section.items.map((i) => (
+            <li key={i.id} className="flex items-center gap-2 text-sm">
+              <Link to={i.url} className="min-w-0 flex-1 truncate text-steel-300 hover:text-paper">{i.title}</Link>
+              {i.is_demo && <DemoBadge />}
+              <span className="shrink-0 text-[11px] text-steel-500">{[i.subtitle, i.date].filter(Boolean).join(' · ')}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="mt-2 text-[11px] text-steel-500">Totale: {section.total}{section.note && ` · ${section.note}`}</p>
+    </>
+  );
+}
+
 function renderWidget(id: WidgetId, d: DashboardData, onRead: (nid: number) => void): ReactNode {
   switch (id) {
     case 'modules':
       return (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(15.5rem,1fr))] gap-2">
           {d.modules.map((m) => {
-            const nav = MODULE_NAV.find((n) => n.to === `/modules/${m.id}`);
+            const nav = MODULE_NAV.find((n) => n.moduleId === m.id);
             const Icon = nav?.icon;
             return (
               <Link
                 key={m.id}
-                to={`/modules/${m.id}`}
+                to={moduleRoute(m.id)}
                 className="group flex min-w-0 flex-col gap-2 rounded-md border border-ink-700 bg-ink-850 p-3 hover:border-gold-500/60"
               >
                 <div className="flex items-center gap-2">
@@ -50,7 +72,7 @@ function renderWidget(id: WidgetId, d: DashboardData, onRead: (nid: number) => v
                 </div>
                 <p className="line-clamp-2 text-xs text-steel-400">{m.summary}</p>
                 <div>
-                  <Badge tone="gold">In preparazione · Fase {m.phase}</Badge>
+                  <Badge tone={m.status === 'available' ? 'ok' : 'gold'}>{MODULE_STATUS[m.status]}{m.status !== 'available' && ` · Fase ${m.phase}`}</Badge>
                 </div>
               </Link>
             );
@@ -123,11 +145,11 @@ function renderWidget(id: WidgetId, d: DashboardData, onRead: (nid: number) => v
         </>
       );
     case 'indicators':
-      return <NotAvailable reason={d.indicators.reason} phase={d.indicators.planned_phase} />;
+      return <SectionView section={d.indicators} />;
     case 'events':
-      return <NotAvailable reason={d.events.reason} phase={d.events.planned_phase} />;
+      return <SectionView section={d.events} />;
     case 'reports':
-      return <NotAvailable reason={d.reports.reason} phase={d.reports.planned_phase} />;
+      return <SectionView section={d.reports} />;
     case 'ai':
       return (
         <div className="flex items-start gap-3 text-sm">

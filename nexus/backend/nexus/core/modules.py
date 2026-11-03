@@ -32,12 +32,18 @@ MODULES: list[ModuleDefinition] = [
         name="Historical Intelligence",
         summary="Archivio strutturato di eventi storici con cause, conseguenze, fonti e grado di attendibilità.",
         phase=3,
-        status="in_preparation",
+        status="available",
         planned_features=[
             "Schede evento (date, periodo, area, cause, conseguenze, attori, istituzioni)",
             "Fonti bibliografiche e grado di attendibilità per ogni evento",
             "Categorie: storia economica, monetaria, bancaria, industriale, guerre, crisi, imperi",
             "Creazione, modifica e collegamento tra eventi",
+        ],
+        implemented_features=[
+            "Schede evento con date storiche (anche a.C.), periodo, area, paesi, cause, conseguenze, attori, istituzioni",
+            "Categorie economiche, grado di attendibilità e avviso per fonti mancanti o non verificate",
+            "Collegamento a fonti bibliografiche con pagine e note",
+            "Collegamento tra eventi tramite relazioni tipizzate del Knowledge Graph",
         ],
     ),
     ModuleDefinition(
@@ -60,11 +66,17 @@ MODULES: list[ModuleDefinition] = [
         name="Historical Time Machine",
         summary="Timeline interattiva con filtro temporale contro il bias del senno di poi.",
         phase=3,
-        status="in_preparation",
+        status="available",
         planned_features=[
             "Selezione per anno, periodo, paese, evento e categoria economica",
             "Distinzione tra conoscenze disponibili all'epoca e scoperte successive",
             "Evoluzione dei sistemi monetari e delle politiche economiche",
+        ],
+        implemented_features=[
+            "Vista a una data con filtri per paese, categoria e intervallo",
+            "Filtro anti-senno-di-poi: nasconde eventi successivi, conseguenze retrospettive e informazioni emerse dopo",
+            "Informazioni datate (contemporanee, scoperte successive, aperture d'archivio, storiografia)",
+            "Indicatori economici disponibili fino alla data, con avviso sulle revisioni",
         ],
     ),
     ModuleDefinition(
@@ -73,11 +85,16 @@ MODULES: list[ModuleDefinition] = [
         name="Knowledge Graph",
         summary="Rete di entità e relazioni, ciascuna con fonte o marcata come ipotesi AI.",
         phase=3,
-        status="in_preparation",
+        status="available",
         planned_features=[
             "Entità: persone, stati, aziende, banche, istituzioni, eventi, documenti, teorie, indicatori",
             "Relazioni tipizzate (ha causato, ha influenzato, ha finanziato, ...) con fonte obbligatoria",
             "Esplorazione, filtri e schede entità",
+        ],
+        implemented_features=[
+            "Entità di 9 tipi e relazioni di 8 tipi con provenienza obbligatoria (fonte, passaggio o ipotesi)",
+            "Esplorazione per focus e profondità, filtri, layout e centralità calcolati con NetworkX",
+            "Percorso più breve tra due entità",
         ],
     ),
     ModuleDefinition(

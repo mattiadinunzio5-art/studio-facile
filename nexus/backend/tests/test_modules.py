@@ -2,7 +2,8 @@ def test_eight_modules_in_preparation(client):
     mods = client.get("/api/modules").json()
     assert [m["code"] for m in mods] == list("ABCDEFGH")
     # In Fase 1 nessun modulo analitico è dichiarato disponibile.
-    assert all(m["status"] == "in_preparation" for m in mods)
+    assert {m["id"] for m in mods if m["status"] == "available"} >= {"historical", "time-machine", "knowledge-graph"}
+    assert all(m["implemented_features"] for m in mods if m["status"] == "available")
     assert all(m["phase"] >= 2 for m in mods)
     assert all(m["planned_features"] for m in mods)
 

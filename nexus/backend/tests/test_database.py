@@ -16,6 +16,11 @@ EXPECTED_TABLES = {
     "document_chunks",
     "sources",
     "chunks_fts",
+    "historical_events",
+    "event_sources",
+    "knowledge_items",
+    "entities",
+    "relations",
 }
 
 

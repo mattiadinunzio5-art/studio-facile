@@ -15,6 +15,8 @@ from ..agents.providers import active_provider
 from ..api.schemas import (
     ActivityOut,
     AIActivity,
+    DataItem,
+    DataSection,
     DashboardOut,
     ModuleOut,
     NotificationOut,
@@ -58,10 +60,7 @@ def build(db: Session, user: User, settings: Settings) -> DashboardOut:
             reason="Nessuna serie economica importata. I connettori a fonti aperte saranno attivi con il modulo Financial Intelligence.",
             planned_phase=4,
         ),
-        events=UnavailableSection(
-            reason="L'archivio degli eventi storici sarà disponibile con il modulo Historical Intelligence.",
-            planned_phase=3,
-        ),
+        events=_events(db, user),
         reports=UnavailableSection(
             reason="La generazione e l'esportazione dei rapporti saranno disponibili con il Research Studio.",
             planned_phase=7,
@@ -78,4 +77,27 @@ def build(db: Session, user: User, settings: Settings) -> DashboardOut:
             items=[NotificationOut.model_validate(n) for n in notifications.list_for_user(db, user, limit=5)],
         ),
         recent_activity=[ActivityOut.model_validate(a) for a in activity.list_for_user(db, user, limit=8)],
+    )
+
+
+def _events(db: Session, user: User) -> DataSection | UnavailableSection:
+    from sqlalchemy import func, select
+
+    from ..history import dates
+    from ..models import HistoricalEvent
+
+    total = db.scalar(select(func.count()).select_from(HistoricalEvent).where(HistoricalEvent.owner_id == user.id)) or 0
+    if total == 0:
+        return UnavailableSection(reason="L'archivio storico è vuoto: crea o importa il primo evento.", planned_phase=3)
+    recent = db.scalars(
+        select(HistoricalEvent).where(HistoricalEvent.owner_id == user.id).order_by(HistoricalEvent.updated_at.desc()).limit(6)
+    )
+    return DataSection(
+        total=total,
+        items=[
+            DataItem(id=str(e.id), title=e.title, subtitle=e.reliability,
+                     date=dates.fmt_range(e.start_year, e.start_month, e.start_day, e.end_year, e.end_month, e.end_day),
+                     url=f"/history/events/{e.id}", is_demo=e.is_demo)
+            for e in recent
+        ],
     )

@@ -141,9 +141,9 @@ export interface Dashboard {
   };
   recent_searches: SearchQuery[];
   projects: { active_count: number; archived_count: number; items: Project[] };
-  indicators: UnavailableSection;
-  events: UnavailableSection;
-  reports: UnavailableSection;
+  indicators: DataSection | UnavailableSection;
+  events: DataSection | UnavailableSection;
+  reports: DataSection | UnavailableSection;
   ai: { mode: 'local' | 'remote'; provider: string; runs: unknown[]; note: string };
   notifications: { unread_count: number; items: Notification[] };
   recent_activity: Activity[];
@@ -251,4 +251,198 @@ export interface AskResult {
   claims: Claim[];
   passages: RetrievalHit[];
   disclaimer: string;
+}
+
+// --- Fase 3: Historical Intelligence / Time Machine / Knowledge Graph -------------
+
+export const CATEGORIES = {
+  economic: 'Storia economica',
+  monetary: 'Storia monetaria',
+  banking: 'Storia bancaria',
+  industrial: 'Storia industriale',
+  war_geopolitics: 'Guerre e geopolitica',
+  revolution: 'Rivoluzioni',
+  financial_crisis: 'Crisi finanziarie',
+  empires: 'Imperi e potenze economiche',
+  capitalism: 'Evoluzione del capitalismo',
+} as const;
+export type Category = keyof typeof CATEGORIES;
+
+export const RELIABILITY = {
+  established: 'Consolidata',
+  probable: 'Probabile',
+  disputed: 'Controversa',
+  unverified: 'Non verificata',
+} as const;
+export type Reliability = keyof typeof RELIABILITY;
+
+export const KNOWLEDGE_KINDS = {
+  contemporary: "Nota all'epoca",
+  later_discovery: 'Scoperta successiva',
+  archival_release: "Apertura d'archivio",
+  historiography: 'Storiografia',
+} as const;
+
+export interface KnowledgeItem {
+  id: number;
+  content: string;
+  known_since_year: number;
+  kind: keyof typeof KNOWLEDGE_KINDS;
+  source_id: number | null;
+}
+
+export interface EventInput {
+  title: string;
+  start_year: number;
+  start_month: number | null;
+  start_day: number | null;
+  end_year: number | null;
+  end_month: number | null;
+  end_day: number | null;
+  period: string;
+  region: string;
+  countries: string[];
+  categories: Category[];
+  description: string;
+  causes: string;
+  consequences: string;
+  people: string[];
+  institutions: string[];
+  economic_implications: string;
+  reliability: Reliability;
+  reliability_note: string;
+}
+
+export interface HistoricalEvent extends EventInput {
+  id: number;
+  date_label: string;
+  is_demo: boolean;
+  sources: { source_id: number; citation: string; verification_status: VerificationStatus; pages: string; note: string }[];
+  knowledge: KnowledgeItem[];
+  entity_id: number | null;
+  source_warning: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TimelineEvent {
+  id: number;
+  title: string;
+  date_label: string;
+  start_year: number;
+  end_year: number | null;
+  status_at_date: 'concluded' | 'ongoing' | 'not_applicable';
+  countries: string[];
+  categories: Category[];
+  reliability: Reliability;
+  description: string;
+  consequences: string | null;
+  consequences_hidden: boolean;
+  known_then: KnowledgeItem[];
+  known_later: KnowledgeItem[];
+  hidden_later_count: number;
+  is_demo: boolean;
+}
+
+export interface Timeline {
+  as_of_year: number | null;
+  hindsight: boolean;
+  events: TimelineEvent[];
+  indicators: { series_id: number; name: string; unit: string; source: string; last_date: string; last_value: number; caveat: string }[];
+  hidden_future_events: number;
+  notes: string[];
+}
+
+export const ENTITY_TYPES = {
+  person: 'Persona',
+  state: 'Stato',
+  company: 'Azienda',
+  bank: 'Banca',
+  institution: 'Istituzione',
+  event: 'Evento',
+  document: 'Documento',
+  theory: 'Teoria economica',
+  indicator: 'Indicatore',
+} as const;
+export type EntityType = keyof typeof ENTITY_TYPES;
+
+export const RELATION_TYPES = {
+  caused: 'Ha causato',
+  influenced: 'Ha influenzato',
+  contemporary_of: 'È contemporaneo a',
+  related_to: 'È collegato a',
+  financed: 'Ha finanziato',
+  involved_in: 'È stato coinvolto in',
+  replaced: 'Ha sostituito',
+  preceded: 'Ha preceduto',
+} as const;
+export type RelationType = keyof typeof RELATION_TYPES;
+
+export const PROVENANCE = {
+  sourced: 'Documentata',
+  user_hypothesis: "Ipotesi dell'utente",
+  ai_hypothesis: "Ipotesi AI (da verificare)",
+} as const;
+export type Provenance = keyof typeof PROVENANCE;
+
+export interface Entity {
+  id: number;
+  entity_type: EntityType;
+  name: string;
+  description: string;
+  aliases: string[];
+  start_year: number | null;
+  end_year: number | null;
+  event_id: number | null;
+  document_id: number | null;
+  is_demo: boolean;
+}
+
+export interface Relation {
+  id: number;
+  source_entity_id: number;
+  target_entity_id: number;
+  relation_type: RelationType;
+  provenance: Provenance;
+  source_id: number | null;
+  chunk_id: number | null;
+  evidence_note: string;
+  confidence: 'low' | 'medium' | 'high';
+  start_year: number | null;
+  ai_run_id: number | null;
+  evidence_label: string;
+  created_at: string;
+}
+
+export interface GraphNode {
+  id: number;
+  name: string;
+  entity_type: EntityType;
+  x: number;
+  y: number;
+  degree: number;
+  betweenness: number;
+  is_focus: boolean;
+}
+
+export interface GraphData {
+  nodes: GraphNode[];
+  edges: Relation[];
+  stats: { entities: number; relations: number; shown_nodes: number; shown_edges: number; components: number; by_provenance: Record<Provenance, number> };
+}
+
+export interface DataItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  date: string;
+  url: string;
+  is_demo: boolean;
+}
+
+export interface DataSection {
+  available: true;
+  total: number;
+  items: DataItem[];
+  note: string;
 }

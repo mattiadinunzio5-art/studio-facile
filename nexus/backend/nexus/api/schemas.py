@@ -194,6 +194,24 @@ class UnavailableSection(BaseModel):
     planned_phase: int
 
 
+class DataItem(BaseModel):
+    id: str
+    title: str
+    subtitle: str = ""
+    date: str = ""
+    url: str
+    is_demo: bool = False
+
+
+class DataSection(BaseModel):
+    """Sezione con dati reali presenti nell'archivio."""
+
+    available: Literal[True] = True
+    total: int
+    items: list[DataItem]
+    note: str = ""
+
+
 class SourcesSummary(BaseModel):
     total: int
     implemented: int
@@ -226,9 +244,9 @@ class DashboardOut(BaseModel):
     sources: SourcesSummary
     recent_searches: list[SearchQueryOut]
     projects: ProjectsSummary
-    indicators: UnavailableSection
-    events: UnavailableSection
-    reports: UnavailableSection
+    indicators: DataSection | UnavailableSection
+    events: DataSection | UnavailableSection
+    reports: DataSection | UnavailableSection
     ai: AIActivity
     notifications: NotificationsSummary
     recent_activity: list[ActivityOut]

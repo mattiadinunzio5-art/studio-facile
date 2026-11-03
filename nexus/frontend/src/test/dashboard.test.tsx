@@ -18,7 +18,7 @@ describe('dashboard', () => {
     expect(within(screen.getByTestId('widget-events')).getByText('Non disponibile — previsto in Fase 3')).toBeInTheDocument();
     expect(within(screen.getByTestId('widget-reports')).getByText('Non disponibile — previsto in Fase 7')).toBeInTheDocument();
     expect(within(screen.getByTestId('widget-projects')).getByText('Crisi del 1929')).toBeInTheDocument();
-    expect(within(screen.getByTestId('widget-modules')).getAllByText(/In preparazione · Fase/)).toHaveLength(8);
+    expect(within(screen.getByTestId('widget-modules')).getAllByText(/In preparazione/)).toHaveLength(8);
     expect(within(screen.getByTestId('widget-ai')).getByText(/Esecuzioni AI registrate: 0/)).toBeInTheDocument();
   });
 

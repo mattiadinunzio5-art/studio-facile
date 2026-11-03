@@ -3,6 +3,8 @@
 from .activity import ActivityLog
 from .connector import ConnectorState
 from .document import Document, DocumentChunk
+from .graph import Entity, Relation
+from .history import EventSource, HistoricalEvent, KnowledgeItem
 from .notification import Notification
 from .preference import UserPreference
 from .project import Project
@@ -15,6 +17,11 @@ __all__ = [
     "ConnectorState",
     "Document",
     "DocumentChunk",
+    "Entity",
+    "EventSource",
+    "HistoricalEvent",
+    "KnowledgeItem",
+    "Relation",
     "Notification",
     "Project",
     "SearchQuery",
