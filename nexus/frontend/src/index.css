@@ -1,0 +1,41 @@
+@import 'tailwindcss';
+
+/* Identità visiva NEXUS: antracite, oro tenue, bianco, grigio tecnico. */
+@theme {
+  --color-ink-950: #0d0e10;
+  --color-ink-900: #121316;
+  --color-ink-850: #17181c;
+  --color-ink-800: #1d1f23;
+  --color-ink-700: #2a2c32;
+  --color-ink-600: #3a3d44;
+  --color-steel-500: #7d818a;
+  --color-steel-400: #9a9ea6;
+  --color-steel-300: #b9bcc2;
+  --color-paper: #f2f1ed;
+  --color-gold-300: #dcc48e;
+  --color-gold-400: #c6a75e;
+  --color-gold-500: #a88b47;
+  --color-ok: #6fae8a;
+  --color-warn: #d2a24c;
+  --color-bad: #d26a5c;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--color-ink-950);
+  color: var(--color-paper);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-gold-400);
+  outline-offset: 2px;
+}

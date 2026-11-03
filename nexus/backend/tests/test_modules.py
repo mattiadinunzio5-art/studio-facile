@@ -1,0 +1,14 @@
+def test_eight_modules_in_preparation(client):
+    mods = client.get("/api/modules").json()
+    assert [m["code"] for m in mods] == list("ABCDEFGH")
+    # In Fase 1 nessun modulo analitico è dichiarato disponibile.
+    assert all(m["status"] == "in_preparation" for m in mods)
+    assert all(m["phase"] >= 2 for m in mods)
+    assert all(m["planned_features"] for m in mods)
+
+
+def test_get_single_module(client):
+    assert client.get("/api/modules/financial").json()["phase"] == 4
+    r = client.get("/api/modules/nope")
+    assert r.status_code == 404
+    assert r.json()["error"]["code"] == "not_found"

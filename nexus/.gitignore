@@ -1,0 +1,19 @@
+# Dati locali e segreti
+.env
+data/*
+!data/.gitkeep
+backups/
+
+# Python
+backend/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+*.tsbuildinfo
+
+# Output degli script
+scripts/out/
