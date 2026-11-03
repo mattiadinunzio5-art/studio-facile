@@ -1,6 +1,7 @@
 import {
   Activity,
   Bell,
+  Newspaper,
   BookMarked,
   FileText,
   MessageSquareQuote,
@@ -39,11 +40,14 @@ export const MODULE_NAV: NavItem[] = [
   { to: '/graph', label: 'Knowledge Graph', icon: Network, code: 'D', moduleId: 'knowledge-graph' },
   { to: '/war-room', moduleId: 'war-room', label: 'Research War Room', icon: Swords, code: 'E' },
   { to: '/lab', moduleId: 'economic-lab', label: 'Economic Laboratory', icon: FlaskConical, code: 'F' },
-  { to: '/modules/research-studio', moduleId: 'research-studio', label: 'Research Studio', icon: BookOpenText, code: 'G', phase: 7 },
+  { to: '/studio', moduleId: 'research-studio', label: 'Research Studio', icon: BookOpenText, code: 'G' },
   { to: '/modules/business', moduleId: 'business', label: 'NEXUS Business', icon: Briefcase, code: 'H', phase: 8 },
 ];
 
-export const MAIN_NAV: NavItem[] = [{ to: '/', label: 'Dashboard', icon: LayoutDashboard }];
+export const MAIN_NAV: NavItem[] = [
+  { to: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/briefing', label: 'Daily Briefing', icon: Newspaper },
+];
 
 export const ARCHIVE_NAV: NavItem[] = [
   { to: '/documents', label: 'Documenti', icon: FileText },

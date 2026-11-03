@@ -61,10 +61,7 @@ def build(db: Session, user: User, settings: Settings) -> DashboardOut:
         ),
         indicators=_indicators(db, user),
         events=_events(db, user),
-        reports=UnavailableSection(
-            reason="La generazione e l'esportazione dei rapporti saranno disponibili con il Research Studio.",
-            planned_phase=7,
-        ),
+        reports=_reports(db, user),
         ai=_ai_activity(db, user, provider),
         notifications=NotificationsSummary(
             unread_count=notifications.unread_count(db, user),
@@ -129,3 +126,13 @@ def _ai_activity(db: Session, user: User, provider) -> AIActivity:
         note="Nessun provider AI configurato: le ricerche usano il motore locale e gli agenti che richiedono un modello risultano non eseguiti."
         if provider.id == "none" else f"Provider selezionato: {provider.name}. Ogni run richiede approvazione finale.",
     )
+
+
+def _reports(db: Session, user: User) -> DataSection | UnavailableSection:
+    from . import studio
+
+    reps = studio.list_reports(db, user)
+    if not reps:
+        return UnavailableSection(reason="Nessun rapporto: creane uno nel Research Studio o da una ricerca approvata.", planned_phase=7)
+    return DataSection(total=len(reps), items=[DataItem(id=str(r.id), title=r.title, subtitle="approvato" if r.status == "approved" else "bozza",
+                                                        date=r.updated_at.strftime("%Y-%m-%d"), url=f"/studio/reports/{r.id}") for r in reps[:6]])

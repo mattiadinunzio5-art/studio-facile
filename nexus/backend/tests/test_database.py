@@ -27,6 +27,10 @@ EXPECTED_TABLES = {
     "research_runs",
     "agent_steps",
     "simulation_runs",
+    "reports",
+    "report_sections",
+    "notes",
+    "briefings",
 }
 
 

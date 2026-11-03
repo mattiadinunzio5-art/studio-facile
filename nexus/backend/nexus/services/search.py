@@ -12,11 +12,10 @@ from sqlalchemy.orm import Session
 
 from ..api.schemas import SearchHit, SearchResultOut
 from ..core.modules import MODULES
-from ..models import Document, Entity, HistoricalEvent, Project, SearchQuery, Series, User
+from ..models import Document, Entity, HistoricalEvent, Project, Report, SearchQuery, Series, User
 from ..research import index
 
 UNAVAILABLE_SCOPES = [
-    "rapporti (Fase 7)",
 ]
 
 
@@ -90,6 +89,8 @@ def search(db: Session, user: User, query: str, limit: int = 25) -> SearchResult
         hits.append(SearchHit(type="entity", id=str(ent.id), title=ent.name, snippet=ent.entity_type, url=f"/graph?focus={ent.id}"))
     for se in db.scalars(select(Series).where(Series.owner_id == user.id, Series.name.ilike(pattern, escape="\\")).limit(limit)):
         hits.append(SearchHit(type="series", id=str(se.id), title=se.name, snippet=se.source_label, url=f"/financial/series/{se.id}"))
+    for rp in db.scalars(select(Report).where(Report.owner_id == user.id, Report.title.ilike(pattern, escape="\\")).limit(limit)):
+        hits.append(SearchHit(type="report", id=str(rp.id), title=rp.title, snippet="approvato" if rp.status == "approved" else "bozza", url=f"/studio/reports/{rp.id}"))
     q = query.lower()
     for m in MODULES:
         if q in m.name.lower() or q in m.summary.lower():
@@ -108,7 +109,7 @@ def search(db: Session, user: User, query: str, limit: int = 25) -> SearchResult
     return SearchResultOut(
         query=query,
         hits=hits,
-        searched_scopes=["progetti", "documenti", "eventi storici", "entità", "serie", "catalogo moduli"],
+        searched_scopes=["progetti", "documenti", "eventi storici", "entità", "serie", "rapporti", "catalogo moduli"],
         unavailable_scopes=UNAVAILABLE_SCOPES,
     )
 

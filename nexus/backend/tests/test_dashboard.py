@@ -7,7 +7,7 @@ def test_dashboard_contains_only_real_or_declared_unavailable_data(client):
     assert len(d["modules"]) == 8
     assert d["projects"]["active_count"] == 1
     assert d["projects"]["items"][0]["title"] == "Debito pubblico italiano"
-    for key, phase in (("indicators", 4), ("reports", 7)):
+    for key, phase in (("indicators", 4), ("reports", 7), ("events", 3)):
         assert d[key]["available"] is False
         assert d[key]["planned_phase"] == phase
         assert d[key]["reason"]

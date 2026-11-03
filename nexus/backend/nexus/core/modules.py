@@ -154,7 +154,7 @@ MODULES: list[ModuleDefinition] = [
         name="Research Studio",
         summary="Produzione di rapporti professionali con citazioni verificabili ed esportazione PDF/DOCX.",
         phase=7,
-        status="in_preparation",
+        status="available",
         planned_features=[
             "Progetti, capitoli, appunti, fonti collegate, grafici e tabelle",
             "Struttura di rapporto in 10 sezioni (abstract ... bibliografia)",
@@ -162,7 +162,13 @@ MODULES: list[ModuleDefinition] = [
             "Importazione PDF, DOCX, CSV ed esportazione PDF/DOCX",
         ],
         implemented_features=[
-            "Progetti di ricerca: creazione, modifica, archiviazione, eliminazione con conferma (Fase 1)",
+            "Progetti, rapporti con le 10 sezioni standard, capitoli aggiuntivi ordinabili, appunti collegati a fonti e documenti",
+            "Citazioni verificabili [@id, p. N] con numerazione automatica; citazioni non valide e fonti non verificate segnalate",
+            "Grafici di serie e simulazioni, tabelle; esportazione PDF (ReportLab) e DOCX (python-docx) con filigrana BOZZA",
+            "Approvazione solo dopo il controllo di sezioni, citazioni e allegati; ogni modifica riporta in bozza",
+            "Bozza di rapporto generata da una ricerca approvata della War Room",
+            "Daily Briefing con data e fonte per ogni voce, generabile a richiesta o con cron (scripts/generate_briefing.py)",
+            "Importazione PDF, DOCX, CSV, XLSX, TXT, MD nell'archivio (anche opere personali)",
         ],
     ),
     ModuleDefinition(

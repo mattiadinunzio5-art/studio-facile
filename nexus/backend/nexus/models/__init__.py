@@ -13,10 +13,15 @@ from .preference import UserPreference
 from .project import Project
 from .search import SearchQuery
 from .source import Source
+from .studio import Briefing, Note, Report, ReportSection
 from .user import User
 
 __all__ = [
     "ActivityLog",
+    "Briefing",
+    "Note",
+    "Report",
+    "ReportSection",
     "AgentStep",
     "ResearchRun",
     "ConnectorState",
