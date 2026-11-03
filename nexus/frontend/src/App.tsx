@@ -9,6 +9,7 @@ import { ModulePage } from './pages/ModulePage';
 import { EventDetailPage, EventsPage } from './pages/History';
 import { TimeMachinePage } from './pages/TimeMachine';
 import { GraphPage } from './pages/Graph';
+import { ComparePage, FinancialPage, SeriesDetailPage } from './pages/Financial';
 import { NotFoundPage } from './pages/NotFound';
 import { NotificationsPage } from './pages/Notifications';
 import { ProjectsPage } from './pages/Projects';
@@ -38,6 +39,9 @@ export function App() {
           <Route path="history/events/:eventId" element={<EventDetailPage />} />
           <Route path="time-machine" element={<TimeMachinePage />} />
           <Route path="graph" element={<GraphPage />} />
+          <Route path="financial" element={<FinancialPage />} />
+          <Route path="financial/series/:seriesId" element={<SeriesDetailPage />} />
+          <Route path="financial/compare" element={<ComparePage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

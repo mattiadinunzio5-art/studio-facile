@@ -34,7 +34,7 @@ export interface NavItem {
  */
 export const MODULE_NAV: NavItem[] = [
   { to: '/history', label: 'Historical Intelligence', icon: Landmark, code: 'A', moduleId: 'historical' },
-  { to: '/modules/financial', moduleId: 'financial', label: 'Financial Intelligence', icon: ChartLine, code: 'B', phase: 4 },
+  { to: '/financial', moduleId: 'financial', label: 'Financial Intelligence', icon: ChartLine, code: 'B' },
   { to: '/time-machine', label: 'Time Machine', icon: History, code: 'C', moduleId: 'time-machine' },
   { to: '/graph', label: 'Knowledge Graph', icon: Network, code: 'D', moduleId: 'knowledge-graph' },
   { to: '/modules/war-room', moduleId: 'war-room', label: 'Research War Room', icon: Swords, code: 'E', phase: 5 },

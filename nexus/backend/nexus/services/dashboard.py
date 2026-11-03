@@ -56,10 +56,7 @@ def build(db: Session, user: User, settings: Settings) -> DashboardOut:
             archived_count=proj_counts.get("archived", 0),
             items=[ProjectOut.model_validate(p) for p in active],
         ),
-        indicators=UnavailableSection(
-            reason="Nessuna serie economica importata. I connettori a fonti aperte saranno attivi con il modulo Financial Intelligence.",
-            planned_phase=4,
-        ),
+        indicators=_indicators(db, user),
         events=_events(db, user),
         reports=UnavailableSection(
             reason="La generazione e l'esportazione dei rapporti saranno disponibili con il Research Studio.",
@@ -101,3 +98,23 @@ def _events(db: Session, user: User) -> DataSection | UnavailableSection:
             for e in recent
         ],
     )
+
+
+def _indicators(db: Session, user: User) -> DataSection | UnavailableSection:
+    from ..models import Series
+    from . import finance
+
+    series = finance.list_series(db, user)
+    if not series:
+        return UnavailableSection(
+            reason="Nessuna serie importata. Importa indicatori da World Bank, Eurostat, OWID o FRED (con chiave) nel modulo Financial Intelligence.",
+            planned_phase=4,
+        )
+    items = []
+    for s in series[:8]:
+        out = finance.to_out(db, s)
+        value = f"{out.last_value:,.4g} {s.unit}".strip() if out.last_value is not None else "nessun valore"
+        items.append(DataItem(id=str(s.id), title=s.name, subtitle=value, date=f"ultimo dato {out.last_date or '—'}",
+                              url=f"/financial/series/{s.id}", is_demo=s.is_demo))
+    return DataSection(total=len(series), items=items,
+                       note="Valori storici dell'ultima osservazione pubblicata dalla fonte, non quotazioni in tempo reale.")

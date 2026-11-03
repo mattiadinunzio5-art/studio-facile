@@ -12,7 +12,7 @@ def test_dashboard_contains_only_real_or_declared_unavailable_data(client):
         assert d[key]["planned_phase"] == phase
         assert d[key]["reason"]
     assert d["ai"]["mode"] == "local" and d["ai"]["runs"] == []
-    assert d["sources"]["total"] == 8 and d["sources"]["implemented"] == 0
+    assert d["sources"]["total"] == 8 and d["sources"]["implemented"] == 5
     assert d["notifications"]["unread_count"] == 1
     assert d["layout"]["order"] == ALL_WIDGETS
 

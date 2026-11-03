@@ -52,12 +52,20 @@ MODULES: list[ModuleDefinition] = [
         name="Financial Intelligence",
         summary="Laboratorio su serie storiche finanziarie e macroeconomiche da fonti aperte documentate.",
         phase=4,
-        status="in_preparation",
+        status="available",
         planned_features=[
             "Serie con fonte, unità, frequenza, periodo, data di aggiornamento e dati mancanti",
             "Rendimenti, volatilità, drawdown, medie mobili, correlazioni",
             "Confronto tra strumenti con armonizzazione esplicita delle frequenze",
             "Connettori FRED, World Bank, IMF, OECD, Eurostat, BIS, Our World in Data",
+        ],
+        implemented_features=[
+            "Import reale da World Bank, Eurostat, Our World in Data e FRED (con chiave), più caricamento CSV",
+            "Metadati per ogni serie: fonte, unità, frequenza, periodo, aggiornamento dichiarato dalla fonte, dati mancanti, licenza",
+            "Cache su disco e funzionamento con fonte offline (dato marcato come proveniente dalla cache)",
+            "Rendimenti, volatilità annualizzata, drawdown, medie mobili, CAGR, trend, test ADF, autocorrelazione, anomalie",
+            "Confronto e correlazioni con ricampionamento solo esplicito (frequenza e metodo dichiarati)",
+            "Connettori IMF, OECD e BIS non ancora implementati (dichiarati nella pagina Fonti)",
         ],
     ),
     ModuleDefinition(

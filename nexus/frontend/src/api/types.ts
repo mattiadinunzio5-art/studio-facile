@@ -446,3 +446,81 @@ export interface DataSection {
   items: DataItem[];
   note: string;
 }
+
+// --- Fase 4: Financial Intelligence ---------------------------------------------------
+
+export const SERIES_CATEGORIES = {
+  stocks: 'Azioni', indices: 'Indici', bonds: 'Obbligazioni', commodities: 'Materie prime', precious_metals: 'Oro e metalli preziosi',
+  fx: 'Valute', crypto: 'Criptovalute', rates: "Tassi d'interesse", inflation: 'Inflazione', public_debt: 'Debito pubblico',
+  gdp: 'PIL', unemployment: 'Disoccupazione', trade_balance: 'Bilance commerciali', other: 'Altro',
+} as const;
+export type SeriesCategory = keyof typeof SERIES_CATEGORIES;
+export type Frequency = 'D' | 'W' | 'M' | 'Q' | 'A';
+export const FREQUENCY_LABEL: Record<Frequency, string> = { D: 'Giornaliera', W: 'Settimanale', M: 'Mensile', Q: 'Trimestrale', A: 'Annuale' };
+
+export interface SeriesInfo {
+  id: number;
+  name: string;
+  category: SeriesCategory;
+  country: string;
+  connector: string;
+  source_series_id: string;
+  source_label: string;
+  source_url: string;
+  license_note: string;
+  unit: string;
+  frequency: Frequency;
+  start_date: string | null;
+  end_date: string | null;
+  source_last_updated: string;
+  retrieved_at: string | null;
+  from_cache: boolean;
+  observation_count: number;
+  missing_count: number;
+  description: string;
+  is_demo: boolean;
+  last_value: number | null;
+  last_date: string | null;
+  created_at: string;
+}
+
+export interface Point { date: string; value: number | null }
+
+export interface SeriesDetail extends SeriesInfo {
+  observations: Point[];
+  import_warnings: string[];
+}
+
+export interface Preset { connector: string; label: string; category: SeriesCategory; params: Record<string, unknown> }
+
+export interface Analysis {
+  series_id: number;
+  frequency: Frequency;
+  metrics_basis: 'levels' | 'rates';
+  summary: Record<string, number | string | null>;
+  returns?: Record<string, number | string | null>;
+  changes?: Record<string, number | string | null>;
+  drawdown?: { max_drawdown: number; peak_date: string; trough_date: string; recovery_date: string | null };
+  drawdown_series?: Point[];
+  returns_series: Point[];
+  moving_averages: Record<string, Point[]>;
+  anomalies: { date: string; change: number; z: number }[];
+  timeseries: { linear_trend?: { slope_per_period: number }; adf?: { statistic: number; p_value: number; interpretation: string; nobs: number }; acf?: number[]; note?: string };
+  warnings: string[];
+  source: { label: string; url: string; unit: string; frequency: Frequency; last_updated: string; retrieved_at: string | null };
+}
+
+export interface Comparison {
+  frequency: Frequency;
+  common_observations: number;
+  basis: 'returns' | 'levels';
+  period: { start: string; end: string };
+  procedure: string[];
+  correlation: Record<string, Record<string, number | null>>;
+  aligned: Record<string, Point[]>;
+  rebased_100: Record<string, Point[] | null>;
+  notes: string[];
+  series: { id: number; name: string; unit: string; frequency: Frequency; source: string }[];
+}
+
+export interface CredentialInfo { provider: string; configured: boolean; hint: string; config: Record<string, string>; updated_at: string | null }

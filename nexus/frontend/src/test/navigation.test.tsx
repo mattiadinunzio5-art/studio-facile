@@ -12,7 +12,7 @@ describe('navigation', () => {
     for (const label of ['Historical Intelligence', 'Financial Intelligence', 'Time Machine', 'Knowledge Graph', 'Research War Room', 'Economic Laboratory', 'Research Studio', 'NEXUS Business']) {
       expect(within(nav).getByRole('link', { name: new RegExp(label) })).toBeInTheDocument();
     }
-    expect(within(nav).getByRole('link', { name: /Financial Intelligence/ })).toHaveAttribute('href', '/modules/financial');
+    expect(within(nav).getByRole('link', { name: /Financial Intelligence/ })).toHaveAttribute('href', '/financial');
   });
 
   it('opens a module page that declares it is in preparation', async () => {

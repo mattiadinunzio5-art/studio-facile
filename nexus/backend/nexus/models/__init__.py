@@ -2,6 +2,7 @@
 
 from .activity import ActivityLog
 from .connector import ConnectorState
+from .finance import Credential, Observation, Series
 from .document import Document, DocumentChunk
 from .graph import Entity, Relation
 from .history import EventSource, HistoricalEvent, KnowledgeItem
@@ -15,6 +16,9 @@ from .user import User
 __all__ = [
     "ActivityLog",
     "ConnectorState",
+    "Credential",
+    "Observation",
+    "Series",
     "Document",
     "DocumentChunk",
     "Entity",

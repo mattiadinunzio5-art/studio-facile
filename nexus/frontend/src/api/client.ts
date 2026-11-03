@@ -1,4 +1,10 @@
 import type {
+  Analysis,
+  Comparison,
+  CredentialInfo,
+  Preset,
+  SeriesDetail,
+  SeriesInfo,
   EntityType,
   Entity,
   EventInput,
@@ -159,4 +165,25 @@ export const api = {
   entityRelations: (id: number) => request<Relation[]>(`/graph/entities/${id}/relations`),
   createRelation: (data: Record<string, unknown>) => request<Relation>('/graph/relations', json('POST', data)),
   deleteRelation: (id: number) => request<void>(`/graph/relations/${id}`, { method: 'DELETE' }),
+
+  // Fase 4
+  presets: () => request<Preset[]>('/finance/presets'),
+  seriesList: (category?: string) => request<SeriesInfo[]>(`/finance/series${qs({ category })}`),
+  series: (id: number) => request<SeriesDetail>(`/finance/series/${id}`),
+  importSeries: (data: Record<string, unknown>) => request<SeriesDetail>('/finance/series/import', json('POST', data)),
+  uploadSeries: (form: FormData) => request<SeriesDetail>('/finance/series/upload', { method: 'POST', body: form }),
+  refreshSeries: (id: number) => request<SeriesDetail>(`/finance/series/${id}/refresh`, { method: 'POST' }),
+  deleteSeries: (id: number) => request<void>(`/finance/series/${id}?confirm=true`, { method: 'DELETE' }),
+  analysis: (id: number, ma: number[], returns = 'simple', metrics?: string) => {
+    const p = new URLSearchParams({ returns });
+    for (const w of ma) p.append('ma', String(w));
+    if (metrics) p.set('metrics', metrics);
+    return request<Analysis>(`/finance/series/${id}/analysis?${p}`);
+  },
+  compare: (data: { series_ids: number[]; target_frequency?: string | null; method: string; mode: string }) =>
+    request<Comparison>('/finance/compare', json('POST', data)),
+
+  credentials: () => request<CredentialInfo[]>('/credentials'),
+  setCredential: (data: { provider: string; secret?: string; base_url?: string; model?: string }) => request<CredentialInfo>('/credentials', json('PUT', data)),
+  deleteCredential: (provider: string) => request<void>(`/credentials/${provider}`, { method: 'DELETE' }),
 };

@@ -39,6 +39,7 @@ CONNECTORS: list[ConnectorDefinition] = [
         requires_api_key=True,
         planned_phase=4,
         notes="L'API richiede una chiave gratuita. Alcune serie sono di terzi con diritti propri.",
+        implemented=True,
     ),
     ConnectorDefinition(
         id="world-bank",
@@ -50,6 +51,7 @@ CONNECTORS: list[ConnectorDefinition] = [
         requires_api_key=False,
         planned_phase=4,
         notes="Licenza indicata per singolo dataset.",
+        implemented=True,
     ),
     ConnectorDefinition(
         id="imf",
@@ -72,6 +74,7 @@ CONNECTORS: list[ConnectorDefinition] = [
         requires_api_key=False,
         planned_phase=4,
         notes="I dati di terze parti restano soggetti alle licenze delle fonti originali.",
+        implemented=True,
     ),
     ConnectorDefinition(
         id="eurostat",
@@ -83,6 +86,7 @@ CONNECTORS: list[ConnectorDefinition] = [
         requires_api_key=False,
         planned_phase=4,
         notes="Verificare le eccezioni indicate nella policy sul copyright.",
+        implemented=True,
     ),
     ConnectorDefinition(
         id="oecd",
@@ -115,8 +119,9 @@ CONNECTORS: list[ConnectorDefinition] = [
         terms_url="https://www.gutenberg.org/policy/permission.html",
         requires_api_key=False,
         planned_phase=2,
-        notes="Lo stato di pubblico dominio dipende dal paese; il marchio ha regole proprie. "
+        notes="Importazione di singoli testi su richiesta. Lo stato di pubblico dominio dipende dal paese; il marchio ha regole proprie. "
         "Il sito vieta l'accesso automatizzato massivo: usare i mirror/feed indicati.",
+        implemented=True,
     ),
 ]
 

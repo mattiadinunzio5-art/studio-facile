@@ -21,6 +21,9 @@ EXPECTED_TABLES = {
     "knowledge_items",
     "entities",
     "relations",
+    "series",
+    "observations",
+    "credentials",
 }
 
 

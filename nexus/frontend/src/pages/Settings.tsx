@@ -1,4 +1,5 @@
 import { api } from '../api/client';
+import { CredentialsPanel } from '../components/Credentials';
 import { Badge } from '../components/ui/Badge';
 import { Card } from '../components/ui/Card';
 import { PageHeader } from '../components/ui/PageHeader';
@@ -32,8 +33,8 @@ export function SettingsPage() {
           </Card>
           <Card title="Provider AI">
             <p className="mb-3 text-sm text-steel-300">
-              Provider attivo: <span className="text-paper">{s.ai_provider.name}</span>. La configurazione delle credenziali
-              sarà disponibile in Fase 5; i provider esterni verranno usati solo se configurati da te.
+              Provider attivo: <span className="text-paper">{s.ai_provider.name}</span>. I provider esterni vengono usati solo
+              se configurati da te nelle credenziali qui sotto.
             </p>
             <ul className="divide-y divide-ink-700">
               {s.ai_providers.map((p) => (
@@ -46,6 +47,9 @@ export function SettingsPage() {
                 </li>
               ))}
             </ul>
+          </Card>
+          <Card title="Credenziali dei servizi esterni" className="lg:col-span-2">
+            <CredentialsPanel />
           </Card>
         </div>
       )}
