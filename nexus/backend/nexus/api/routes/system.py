@@ -14,8 +14,8 @@ def health() -> HealthOut:
 
 
 @router.get("/system/status", response_model=SystemStatusOut, summary="Stato di database e modalità AI")
-def system_status(db: DB, settings: AppSettings) -> SystemStatusOut:
-    return system.status(db, settings)
+def system_status(db: DB, settings: AppSettings, user: CurrentUser) -> SystemStatusOut:
+    return system.status(db, settings, user)
 
 
 @router.get("/me", response_model=UserOut, summary="Utente corrente (Fase 1: utente locale)")

@@ -11,7 +11,7 @@ from collections import Counter
 
 from sqlalchemy.orm import Session
 
-from ..agents.providers import active_provider
+from ..agents.providers import AI_PROVIDERS
 from ..api.schemas import (
     ActivityOut,
     AIActivity,
@@ -38,7 +38,10 @@ def build(db: Session, user: User, settings: Settings) -> DashboardOut:
     conns = connectors.list_connectors(db)
     proj_counts = projects.count_by_status(db, user)
     active = projects.list_projects(db, user, status="active")[:6]
-    provider = active_provider(settings.ai_provider)
+    from . import ai as ai_svc
+
+    pid = ai_svc.effective_provider(db, user, settings)
+    provider = next(p for p in AI_PROVIDERS if p.id == pid)
 
     return DashboardOut(
         generated_at=utcnow(),
@@ -62,13 +65,7 @@ def build(db: Session, user: User, settings: Settings) -> DashboardOut:
             reason="La generazione e l'esportazione dei rapporti saranno disponibili con il Research Studio.",
             planned_phase=7,
         ),
-        ai=AIActivity(
-            mode="local" if provider.kind == "local" else "remote",
-            provider=provider.name,
-            runs=[],
-            note="Nessun modello AI è stato eseguito. Gli agenti di ricerca arriveranno in Fase 5 e "
-            "useranno un provider esterno solo se configurato dall'utente.",
-        ),
+        ai=_ai_activity(db, user, provider),
         notifications=NotificationsSummary(
             unread_count=notifications.unread_count(db, user),
             items=[NotificationOut.model_validate(n) for n in notifications.list_for_user(db, user, limit=5)],
@@ -118,3 +115,17 @@ def _indicators(db: Session, user: User) -> DataSection | UnavailableSection:
                               url=f"/financial/series/{s.id}", is_demo=s.is_demo))
     return DataSection(total=len(series), items=items,
                        note="Valori storici dell'ultima osservazione pubblicata dalla fonte, non quotazioni in tempo reale.")
+
+
+def _ai_activity(db: Session, user: User, provider) -> AIActivity:
+    from ..services import warroom
+
+    runs = warroom.list_runs(db, user, limit=5)
+    return AIActivity(
+        mode="remote" if provider.kind == "remote" else "local",
+        provider=provider.name,
+        runs=[{"id": r.id, "question": r.question[:120], "status": r.status, "mode": r.mode, "provider": r.provider,
+               "created_at": r.created_at.isoformat()} for r in runs],
+        note="Nessun provider AI configurato: le ricerche usano il motore locale e gli agenti che richiedono un modello risultano non eseguiti."
+        if provider.id == "none" else f"Provider selezionato: {provider.name}. Ogni run richiede approvazione finale.",
+    )

@@ -111,11 +111,20 @@ MODULES: list[ModuleDefinition] = [
         name="Research War Room",
         summary="Ricerca multi-agente (Historian, Economist, Quant, Skeptic, Synthesizer) con approvazione finale.",
         phase=5,
-        status="in_preparation",
+        status="available",
         planned_features=[
             "Flusso: domanda, pianificazione, ricerca, analisi, controanalisi, sintesi, approvazione",
             "Provider AI intercambiabili attivati solo con credenziali fornite dall'utente",
             "Modalità locale senza AI con indicazione esplicita delle funzioni non disponibili",
+        ],
+        implemented_features=[
+            "Flusso completo: pianificazione, ricerca, Historian, Economist, Quant, Skeptic, Synthesizer, approvazione",
+            "Provider intercambiabili: Ollama (locale, gratuito), endpoint compatibili OpenAI, Anthropic (con chiave dell'utente)",
+            "Modalità locale reale: ricerca, calcoli, estrazione e controanalisi a regole; gli agenti generativi risultano 'non eseguiti'",
+            "Controlli sull'output AI: nessuna ipotesi promossa a fatto, riferimenti inesistenti rimossi, tracciamento di modello e token",
+            "Documenti trattati come dati non fidati (delimitatori neutralizzati, segnalazione di istruzioni sospette)",
+            "Approvazione obbligatoria; le relazioni proposte entrano nel grafo solo come 'ipotesi AI' dopo approvazione",
+            "Limiti: un run alla volta, numero massimo di passi automatici",
         ],
     ),
     ModuleDefinition(

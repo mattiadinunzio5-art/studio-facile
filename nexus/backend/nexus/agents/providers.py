@@ -1,8 +1,8 @@
 """Registro dei provider AI intercambiabili.
 
-In Fase 1 nessun provider è implementato né attivo: NEXUS lavora in modalità
-locale. I provider esterni saranno attivati (Fase 5) solo se l'utente
-configura volontariamente le proprie credenziali.
+Per impostazione predefinita nessun provider è attivo: NEXUS lavora in modalità
+locale. I provider esterni vengono usati solo se l'utente configura
+volontariamente le credenziali e li seleziona (vedi services/ai.py).
 """
 
 from __future__ import annotations
@@ -34,24 +34,24 @@ AI_PROVIDERS: list[AIProviderDefinition] = [
         name="Ollama (modelli locali)",
         kind="local",
         requires_credentials=False,
-        implemented=False,
-        notes="Previsto in Fase 5. Gratuito, richiede l'installazione locale di Ollama.",
+        implemented=True,
+        notes="Gratuito, gira sul tuo computer: richiede Ollama installato e un modello scaricato.",
     ),
     AIProviderDefinition(
         id="openai-compatible",
         name="API compatibile OpenAI",
         kind="remote",
         requires_credentials=True,
-        implemented=False,
-        notes="Previsto in Fase 5. Qualsiasi endpoint compatibile, configurato dall'utente.",
+        implemented=True,
+        notes="Qualsiasi endpoint /chat/completions configurato dall'utente; costi secondo il fornitore.",
     ),
     AIProviderDefinition(
         id="anthropic",
         name="Anthropic API",
         kind="remote",
         requires_credentials=True,
-        implemented=False,
-        notes="Previsto in Fase 5. A pagamento, solo con chiave fornita dall'utente.",
+        implemented=True,
+        notes="A pagamento, solo con chiave fornita dall'utente. Modello predefinito claude-opus-5-5.",
     ),
 ]
 

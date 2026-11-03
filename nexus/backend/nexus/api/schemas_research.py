@@ -151,6 +151,7 @@ class AskIn(BaseModel):
     question: Annotated[CleanStr, StringConstraints(min_length=3, max_length=1000)]
     document_ids: list[int] | None = None
     limit: int = Field(default=8, ge=1, le=30)
+    use_ai: bool = False
 
 
 class Claim(BaseModel):
@@ -169,3 +170,5 @@ class AskOut(BaseModel):
     claims: list[Claim]
     passages: list[RetrievalHit]
     disclaimer: str
+    issues: list[str] = Field(default_factory=list)
+    model: str = ""

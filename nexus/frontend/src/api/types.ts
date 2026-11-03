@@ -251,6 +251,8 @@ export interface AskResult {
   claims: Claim[];
   passages: RetrievalHit[];
   disclaimer: string;
+  issues?: string[];
+  model?: string;
 }
 
 // --- Fase 3: Historical Intelligence / Time Machine / Knowledge Graph -------------
@@ -524,3 +526,46 @@ export interface Comparison {
 }
 
 export interface CredentialInfo { provider: string; configured: boolean; hint: string; config: Record<string, string>; updated_at: string | null }
+
+// --- Fase 5: AI Research ----------------------------------------------------------------
+
+export interface AgentStep {
+  ordinal: number;
+  agent: 'planner' | 'researcher' | 'historian' | 'economist' | 'quant' | 'skeptic' | 'synthesizer';
+  status: 'executed' | 'skipped' | 'failed';
+  executor: 'local' | 'ai' | 'none';
+  provider: string;
+  model: string;
+  summary: string;
+  output: { claims?: Claim[]; rule_checks?: string[] } & Record<string, unknown>;
+  issues: string[];
+  error: string | null;
+  duration_ms: number;
+  input_tokens: number | null;
+  output_tokens: number | null;
+}
+
+export interface Evidence { id: string; kind: 'passage' | 'event' | 'series'; label: string; text: string; source: string; injection_flag: boolean; ref: Record<string, number> }
+
+export interface ProposedRelation { source: string; target: string; relation_type: RelationType; evidence: string[]; rationale: string }
+
+export interface ResearchRun {
+  id: number;
+  question: string;
+  status: 'queued' | 'running' | 'awaiting_approval' | 'approved' | 'rejected' | 'failed';
+  mode: 'local' | 'ai';
+  provider: string;
+  model: string;
+  project_id: number | null;
+  plan: { sub_questions?: string[]; search_queries?: string[]; method?: string };
+  evidence: Evidence[];
+  result: { abstract?: string; claims?: Claim[]; proposed_relations?: ProposedRelation[]; limitations?: string[]; method?: string };
+  error: string | null;
+  decision_note: string;
+  decided_at: string | null;
+  finished_at: string | null;
+  created_at: string;
+  steps: AgentStep[];
+}
+
+export interface RunSummary { id: number; question: string; status: ResearchRun['status']; mode: string; provider: string; created_at: string }

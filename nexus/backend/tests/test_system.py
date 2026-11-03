@@ -10,8 +10,8 @@ def test_system_status_reports_local_ai_mode(client):
     assert body["database"] == "SQLite"
     assert body["ai_mode"] == "local"
     assert body["ai_provider"]["id"] == "none"
-    # Nessun provider remoto risulta implementato in Fase 1.
-    assert not any(p["implemented"] and p["kind"] == "remote" for p in body["ai_providers"])
+    # I provider remoti esistono ma richiedono credenziali: senza, la modalità resta locale.
+    assert all(p["requires_credentials"] for p in body["ai_providers"] if p["kind"] == "remote")
 
 
 def test_unknown_ai_provider_falls_back_to_local(tmp_path):

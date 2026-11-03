@@ -81,8 +81,16 @@ LOCAL_DISCLAIMER = (
 )
 
 
-def ask(db: Session, user: User, settings: Settings, question: str, document_ids: list[int] | None, limit: int) -> AskOut:
+AI_DISCLAIMER = (
+    "Risposta generata da un modello AI a partire SOLO dai passaggi recuperati. Ogni affermazione è stata controllata: "
+    "quelle presentate come fatti senza evidenze adeguate sono state declassate. Verifica sempre le fonti citate."
+)
+
+
+def ask(db: Session, user: User, settings: Settings, question: str, document_ids: list[int] | None, limit: int, use_ai: bool = False) -> AskOut:
     passages, _ = retrieve(db, user, settings, question, "hybrid", limit, document_ids)
+    if use_ai:
+        return _ask_ai(db, user, settings, question, passages)
     claims = extract_claims(question, passages)
     return AskOut(
         question=question,
@@ -92,3 +100,39 @@ def ask(db: Session, user: User, settings: Settings, question: str, document_ids
         passages=[to_hit(question, p) for p in passages],
         disclaimer=LOCAL_DISCLAIMER,
     )
+
+
+def _ask_ai(db: Session, user: User, settings: Settings, question: str, passages) -> AskOut:
+    from ..agents import guard, llm, prompts
+    from ..core.errors import ValidationFailedError
+    from ..research.safety import wrap_untrusted
+    from . import ai
+
+    try:
+        client = ai.client_for(db, user, settings)
+    except llm.ProviderError as exc:
+        raise ValidationFailedError(str(exc)) from exc
+    if client is None:
+        raise ValidationFailedError("Nessun provider AI configurato: usa la risposta locale o configura un provider in Sistema.")
+    hits = [to_hit(question, p) for p in passages]
+    if not passages:
+        return AskOut(question=question, mode="ai_grounded", provider=client.provider, model=client.model, passages=[],
+                      claims=[Claim(type="missing", text="Nessun passaggio dell'archivio risponde alla domanda.", support="none", evidence=[])],
+                      disclaimer=AI_DISCLAIMER + " Il modello non è stato interrogato perché non c'erano evidenze.")
+    ids = {f"E{i}": p for i, p in enumerate(passages, start=1)}
+    block = "\n".join(wrap_untrusted(k, f"{p.document_title}, {p.locator}", p.text) for k, p in ids.items())
+    try:
+        res = client.complete(prompts.ROLES["synthesizer"], f"Domanda: {question}\n\nEvidenze:\n{block}")
+        data = guard.parse_json(res.text)
+    except (llm.ProviderError, guard.ParseError) as exc:
+        raise ValidationFailedError(f"Risposta AI non disponibile: {exc}") from exc
+    claims, issues = guard.validate_claims(data.get("claims"), {k: {"text": p.text} for k, p in ids.items()})
+    chunk_of = {k: p.chunk_id for k, p in ids.items()}
+    for c in claims:
+        c["evidence"] = [chunk_of[e] for e in c["evidence"]]
+    from . import activity
+
+    activity.record(db, user=user, actor="ai", action="research.ask_ai", summary=f"Domanda all'archivio con {client.provider}: «{question[:80]}»")
+    db.commit()
+    return AskOut(question=question, mode="ai_grounded", provider=client.provider, model=res.model, claims=[Claim(**c) for c in claims],
+                  passages=hits, disclaimer=AI_DISCLAIMER, issues=issues + res.notes)

@@ -1,6 +1,7 @@
 """Modelli ORM. Importare da qui per registrare tutte le tabelle nei metadata."""
 
 from .activity import ActivityLog
+from .agents import AgentStep, ResearchRun
 from .connector import ConnectorState
 from .finance import Credential, Observation, Series
 from .document import Document, DocumentChunk
@@ -15,6 +16,8 @@ from .user import User
 
 __all__ = [
     "ActivityLog",
+    "AgentStep",
+    "ResearchRun",
     "ConnectorState",
     "Credential",
     "Observation",

@@ -15,6 +15,7 @@ export function AskResultView({ result }: { result: AskResult }) {
   return (
     <div className="space-y-4" data-testid="ask-result">
       <p className="rounded-md border border-ink-700 bg-ink-850 p-3 text-xs text-steel-400">{result.disclaimer}</p>
+      {result.issues && result.issues.length > 0 && <ul className="text-xs text-warn">{result.issues.map((i) => <li key={i}>• {i}</li>)}</ul>}
       <Card title="Affermazioni">
         <ul className="space-y-3">
           {result.claims.map((c, i) => (
@@ -47,6 +48,7 @@ export function ResearchArchivePage() {
   const [question, setQuestion] = useState('');
   const [query, setQuery] = useState('');
   const [mode, setMode] = useState('hybrid');
+  const [useAi, setUseAi] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<ApiError>();
   const [ask, setAsk] = useState<AskResult>();
@@ -67,7 +69,7 @@ export function ResearchArchivePage() {
     setBusy(true);
     setError(undefined);
     try {
-      if (tab === 'ask') setAsk(await api.ask(question.trim()));
+      if (tab === 'ask') setAsk(await api.ask(question.trim(), undefined, useAi));
       else setSearch(await api.researchSearch(query.trim(), mode, 20));
     } catch (err) {
       setError(err as ApiError);
@@ -88,7 +90,13 @@ export function ResearchArchivePage() {
       </div>
       <form onSubmit={run} className="mb-6 space-y-3">
         {tab === 'ask' ? (
-          <Field label="Domanda"><Textarea value={question} onChange={(e) => setQuestion(e.target.value)} maxLength={1000} placeholder="Es. Quando terminò la convertibilità del dollaro in oro?" /></Field>
+          <>
+            <Field label="Domanda"><Textarea value={question} onChange={(e) => setQuestion(e.target.value)} maxLength={1000} placeholder="Es. Quando terminò la convertibilità del dollaro in oro?" /></Field>
+            <label className="flex items-center gap-2 text-sm text-steel-300">
+              <input type="checkbox" checked={useAi} onChange={(e) => setUseAi(e.target.checked)} />
+              Risposta con il provider AI configurato (basata solo sui passaggi recuperati)
+            </label>
+          </>
         ) : (
           <div className="flex flex-wrap gap-3">
             <Field label="Termini" className="min-w-60 flex-1"><Input value={query} onChange={(e) => setQuery(e.target.value)} /></Field>

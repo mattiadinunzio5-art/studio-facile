@@ -4,7 +4,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from .. import __version__
-from ..agents.providers import AI_PROVIDERS, active_provider
+from ..agents.providers import AI_PROVIDERS
 from ..api.schemas import AIProviderOut, SystemStatusOut
 from ..core.config import Settings
 from ..database.base import utcnow
@@ -18,8 +18,11 @@ def database_ok(db: Session) -> bool:
         return False
 
 
-def status(db: Session, settings: Settings) -> SystemStatusOut:
-    provider = active_provider(settings.ai_provider)
+def status(db: Session, settings: Settings, user=None) -> SystemStatusOut:
+    from . import ai
+
+    pid = ai.effective_provider(db, user, settings) if user is not None else "none"
+    provider = next(p for p in AI_PROVIDERS if p.id == pid)
     return SystemStatusOut(
         version=__version__,
         environment=settings.env,

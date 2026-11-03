@@ -21,4 +21,4 @@ def search(
 
 @router.post("/ask", response_model=AskOut, summary="Risposta basata sui documenti, con citazioni")
 def ask(data: AskIn, db: DB, user: CurrentUser, settings: AppSettings):
-    return svc.ask(db, user, settings, data.question, data.document_ids, data.limit)
+    return svc.ask(db, user, settings, data.question, data.document_ids, data.limit, data.use_ai)

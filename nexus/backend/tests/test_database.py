@@ -24,6 +24,8 @@ EXPECTED_TABLES = {
     "series",
     "observations",
     "credentials",
+    "research_runs",
+    "agent_steps",
 }
 
 

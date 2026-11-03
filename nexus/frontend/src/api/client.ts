@@ -1,4 +1,6 @@
 import type {
+  ResearchRun,
+  RunSummary,
   Analysis,
   Comparison,
   CredentialInfo,
@@ -134,7 +136,7 @@ export const api = {
 
   researchSearch: (q: string, mode = 'hybrid', limit = 10) =>
     request<RetrievalResult>(`/research/search${qs({ q, mode, limit })}`),
-  ask: (question: string, document_ids?: number[]) => request<AskResult>('/research/ask', json('POST', { question, document_ids })),
+  ask: (question: string, document_ids?: number[], use_ai = false) => request<AskResult>('/research/ask', json('POST', { question, document_ids, use_ai })),
 
   // Fase 3
   events: (params: Record<string, string | number | undefined> = {}) => request<HistoricalEvent[]>(`/history/events${qs(params)}`),
@@ -186,4 +188,12 @@ export const api = {
   credentials: () => request<CredentialInfo[]>('/credentials'),
   setCredential: (data: { provider: string; secret?: string; base_url?: string; model?: string }) => request<CredentialInfo>('/credentials', json('PUT', data)),
   deleteCredential: (provider: string) => request<void>(`/credentials/${provider}`, { method: 'DELETE' }),
+
+  // Fase 5
+  selectProvider: (provider: string, effort = 'medium') => request<{ provider: string }>('/ai/provider', json('PUT', { provider, effort })),
+  runs: () => request<RunSummary[]>('/research/runs'),
+  run: (id: number) => request<ResearchRun>(`/research/runs/${id}`),
+  createRun: (data: { question: string; series_ids?: number[]; project_id?: number | null }) => request<ResearchRun>('/research/runs', json('POST', data)),
+  decideRun: (id: number, data: { decision: 'approve' | 'reject'; note?: string; accepted_relations?: number[] }) =>
+    request<ResearchRun>(`/research/runs/${id}/decision`, json('POST', data)),
 };
