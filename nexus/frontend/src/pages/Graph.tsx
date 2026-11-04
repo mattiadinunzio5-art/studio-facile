@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Plus, Trash2 } from 'lucide-react';
 import { api } from '../api/client';
@@ -23,15 +23,29 @@ const EDGE_STYLE: Record<Provenance, { stroke: string; dash?: string }> = {
   ai_hypothesis: { stroke: '#d26a5c', dash: '2 4' },
 };
 
+function useNarrow(breakpoint = 640): boolean {
+  const [narrow, setNarrow] = useState(() => typeof window !== 'undefined' && window.innerWidth < breakpoint);
+  useEffect(() => {
+    const onResize = () => setNarrow(window.innerWidth < breakpoint);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [breakpoint]);
+  return narrow;
+}
+
 function GraphCanvas({ data, selected, onSelect }: { data: GraphData; selected?: number; onSelect: (id: number) => void }) {
-  const W = 1000, H = 640, PAD = 60;
+  // Su schermi stretti lo spazio logico è più piccolo e verticale: il testo resta leggibile.
+  const narrow = useNarrow();
+  const [W, H, PAD] = narrow ? [400, 520, 36] : [1000, 640, 60];
+  const label = narrow ? 12 : 13;
+  const maxChars = narrow ? 22 : 28;
   const pos = useMemo(() => {
     const xs = data.nodes.map((n) => n.x), ys = data.nodes.map((n) => n.y);
     const [minX, maxX, minY, maxY] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
     const sx = (v: number) => (maxX === minX ? W / 2 : PAD + ((v - minX) / (maxX - minX)) * (W - 2 * PAD));
     const sy = (v: number) => (maxY === minY ? H / 2 : PAD + ((v - minY) / (maxY - minY)) * (H - 2 * PAD));
     return new Map(data.nodes.map((n) => [n.id, { x: sx(n.x), y: sy(n.y) }]));
-  }, [data]);
+  }, [data, W, H, PAD]);
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full rounded-lg border border-ink-700 bg-ink-950" role="img" aria-label={`Grafo con ${data.nodes.length} entità e ${data.edges.length} relazioni`}>
       <defs>
@@ -44,7 +58,7 @@ function GraphCanvas({ data, selected, onSelect }: { data: GraphData; selected?:
         return (
           <g key={e.id}>
             <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={st.stroke} strokeDasharray={st.dash} strokeWidth={1.4} markerEnd="url(#arrow)" />
-            <text x={(a.x + b.x) / 2} y={(a.y + b.y) / 2 - 4} fontSize="11" fill="#7d818a" textAnchor="middle">{RELATION_TYPES[e.relation_type]}</text>
+            <text x={(a.x + b.x) / 2} y={(a.y + b.y) / 2 - 4} fontSize={narrow ? 10 : 11} fill="#9a9ea6" textAnchor="middle">{RELATION_TYPES[e.relation_type]}</text>
           </g>
         );
       })}
@@ -54,7 +68,8 @@ function GraphCanvas({ data, selected, onSelect }: { data: GraphData; selected?:
         return (
           <g key={n.id} onClick={() => onSelect(n.id)} className="cursor-pointer" role="button" aria-label={n.name}>
             <circle cx={p.x} cy={p.y} r={r} fill={TYPE_COLOR[n.entity_type]} stroke={n.id === selected || n.is_focus ? '#dcc48e' : '#0d0e10'} strokeWidth={n.id === selected || n.is_focus ? 3 : 1.5} />
-            <text x={p.x} y={p.y + r + 13} fontSize="13" fill="#f2f1ed" textAnchor="middle">{n.name.length > 28 ? `${n.name.slice(0, 27)}…` : n.name}</text>
+            <text x={p.x < W * 0.3 ? p.x - r : p.x > W * 0.7 ? p.x + r : p.x} y={p.y + r + label} fontSize={label} fill="#f2f1ed"
+              textAnchor={p.x < W * 0.3 ? 'start' : p.x > W * 0.7 ? 'end' : 'middle'}>{n.name.length > maxChars ? `${n.name.slice(0, maxChars - 1)}…` : n.name}</text>
           </g>
         );
       })}

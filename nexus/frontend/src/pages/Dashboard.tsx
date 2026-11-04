@@ -269,7 +269,7 @@ export function DashboardPage() {
       <PageHeader
         eyebrow="Panoramica"
         title="Dashboard"
-        description="Stato reale della piattaforma. Le sezioni che dipendono da moduli non ancora sviluppati lo dichiarano esplicitamente."
+        description="Stato reale della piattaforma. Le sezioni senza dati lo dichiarano esplicitamente."
         actions={
           data && !editing ? (
             <Button onClick={() => setEditing(true)}>
