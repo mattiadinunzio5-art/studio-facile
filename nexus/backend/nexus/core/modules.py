@@ -177,7 +177,7 @@ MODULES: list[ModuleDefinition] = [
         name="NEXUS Business",
         summary="Account, autenticazione, permessi, piani e area amministratore per l'uso SaaS.",
         phase=8,
-        status="in_preparation",
+        status="available",
         planned_features=[
             "Account, autenticazione e profilo",
             "Progetti privati e condivisi con gestione permessi",
@@ -185,7 +185,11 @@ MODULES: list[ModuleDefinition] = [
             "Area amministratore",
         ],
         implemented_features=[
-            "Modello utente e separazione dei dati per owner_id (Fase 1, utente locale unico)",
+            "Due modalità: locale personale (predefinita) e multi-utente con account (NEXUS_AUTH_MODE=multi)",
+            "Registrazione, accesso, sessioni HttpOnly revocabili, cambio password, protezione CSRF, limite ai tentativi",
+            "Separazione completa dei dati per utente; progetti condivisi con ruoli viewer/editor e conferma esplicita",
+            "Piani locale/gratuito/premium con limiti d'uso applicati; nessun pagamento reale (interfaccia predisposta)",
+            "Area amministratore: utenti, ruoli, piani, disattivazione, statistiche",
         ],
     ),
 ]

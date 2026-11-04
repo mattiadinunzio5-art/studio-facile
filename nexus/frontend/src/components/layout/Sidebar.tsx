@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
-import { X } from 'lucide-react';
+import { ShieldCheck, X } from 'lucide-react';
+import { useAuth } from '../../state/Auth';
 import { ARCHIVE_NAV, MAIN_NAV, MODULE_NAV, WORKSPACE_NAV, type NavItem } from '../../lib/nav';
 import { useAppState } from '../../state/AppState';
 
@@ -9,6 +10,7 @@ function Item({ item, onNavigate, badge }: { item: NavItem; onNavigate: () => vo
     <NavLink
       to={item.to}
       end={item.to === '/'}
+      data-module={item.moduleId}
       onClick={onNavigate}
       className={({ isActive }) =>
         `group flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors ${
@@ -48,6 +50,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { unreadCount } = useAppState();
+  const { mode, user } = useAuth();
+  const isAdmin = mode === 'multi' && user?.role === 'admin';
   return (
     <>
       {open && <div className="fixed inset-0 z-30 bg-black/50 lg:hidden" onClick={onClose} aria-hidden />}
@@ -81,10 +85,11 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
             {WORKSPACE_NAV.map((i) => (
               <Item key={i.to} item={i} onNavigate={onClose} badge={i.to === '/notifications' ? unreadCount : undefined} />
             ))}
+            {isAdmin && <Item item={{ to: '/admin', label: 'Amministrazione', icon: ShieldCheck }} onNavigate={onClose} />}
           </Section>
         </nav>
         <p className="border-t border-ink-700 px-4 py-3 text-[11px] leading-relaxed text-steel-500">
-          Fase 1 · Foundation. I moduli con etichetta F<i>n</i> sono in preparazione.
+          {mode === 'multi' && user ? <>Connesso come <span className="text-steel-300">{user.display_name}</span> · piano {user.plan}</> : 'Modalità locale personale · dati sul tuo computer'}
         </p>
       </aside>
     </>

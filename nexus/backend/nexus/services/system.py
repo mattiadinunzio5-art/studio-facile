@@ -32,4 +32,5 @@ def status(db: Session, settings: Settings, user=None) -> SystemStatusOut:
         ai_provider=AIProviderOut(**provider.__dict__),
         ai_providers=[AIProviderOut(**p.__dict__) for p in AI_PROVIDERS],
         server_time=utcnow(),
+        auth_mode=settings.auth_mode,
     )

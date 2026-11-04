@@ -50,17 +50,37 @@
   area centrale, pannello contestuale (drawer sotto 1280 px).
 - Nessuna dipendenza esterna a runtime (niente CDN né font remoti).
 
-### Sicurezza (Fase 1)
+### Sicurezza
 - Validazione di tutti gli input con Pydantic (lunghezze, enum, trim).
 - Ricerca: i caratteri jolly SQL (`%`, `_`) sono trattati letteralmente.
 - CORS limitato alle origini locali configurate.
 - Segreti solo in `.env` (ignorato da git). Nessuna credenziale nel codice.
 - Backup consistente con `scripts/backup_db.py`.
 
-Previsto nelle fasi successive: autenticazione e ruoli (Fase 8), rate limit per le
-operazioni automatiche e per i connettori (Fase 4–5), sanitizzazione dei documenti
-importati e difesa da prompt injection (Fase 2/5: i documenti sono dati, non istruzioni).
+- Autenticazione (modalità `multi`): password con scrypt, token di sessione casuali di cui
+  si salva solo l'hash, cookie HttpOnly SameSite=Strict, intestazione `X-Nexus-Client`
+  obbligatoria per le modifiche via cookie (CSRF), limite ai tentativi di accesso.
+- Credenziali dei servizi esterni cifrate con Fernet; mai restituite dalle API.
+- Intestazioni di sicurezza (`nosniff`, `DENY`, `no-referrer`, `no-store`).
+- Prompt injection: i passaggi sospetti sono segnalati; ai modelli le evidenze arrivano in
+  delimitatori neutralizzati con istruzione esplicita di trattarle come dati non fidati;
+  i modelli non hanno accesso a strumenti, rete o database.
+- Limiti alle operazioni automatiche: un run multi-agente alla volta, numero massimo di passi,
+  quote per piano.
 
-### Modello dati (Fase 1)
-`users`, `projects`, `activity_log`, `notifications`, `search_queries`,
-`connector_states`, `user_preferences`.
+### Flusso multi-agente (Fase 5)
+```
+Domanda ─► Planner ─► Ricerca (strumenti locali: BM25+LSA, eventi, serie)
+        ─► Historian · Economist · Quant ─► Skeptic (controanalisi + regole)
+        ─► Synthesizer ─► guardie (tipi, evidenze, relazioni) ─► Approvazione utente
+```
+In modalità locale ogni agente che richiede generazione di testo è registrato come
+«non eseguito»; i passi eseguiti indicano esecutore, modello, token e durata.
+
+### Modello dati
+Utenti e accesso: `users`, `auth_sessions`, `project_members`, `user_preferences`, `credentials`.
+Archivio: `projects`, `documents`, `document_chunks` (+ `chunks_fts`), `sources`, `notes`.
+Storia e grafo: `historical_events`, `event_sources`, `knowledge_items`, `entities`, `relations`.
+Finanza e laboratorio: `series`, `observations`, `simulation_runs`.
+AI e studio: `research_runs`, `agent_steps`, `reports`, `report_sections`, `briefings`.
+Operatività: `activity_log`, `notifications`, `search_queries`, `connector_states`.

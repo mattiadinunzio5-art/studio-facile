@@ -1,9 +1,8 @@
 """Identità dell'utente corrente.
 
-Fase 1: modalità locale a utente unico. Il backend ascolta solo su 127.0.0.1 e
-ogni richiesta è attribuita all'utente locale. Tutti i servizi ricevono però
-l'utente come parametro e filtrano per ``owner_id``: in Fase 8 basterà
-sostituire questa dipendenza con l'autenticazione reale.
+- Modalità ``local`` (predefinita): utente unico, backend su 127.0.0.1.
+- Modalità ``multi``: sessione obbligatoria (cookie HttpOnly o token Bearer),
+  vedi ``services/auth.py``.
 """
 
 from __future__ import annotations
@@ -23,7 +22,7 @@ def ensure_local_user(db: Session) -> User:
             email=LOCAL_USER_EMAIL,
             display_name="Utente locale",
             role="owner",
-            plan="free",
+            plan="local",
             is_local=True,
         )
         db.add(user)

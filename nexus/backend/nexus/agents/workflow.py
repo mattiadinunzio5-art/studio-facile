@@ -36,6 +36,24 @@ from ..research.text import terms
 from . import guard, llm, prompts
 
 
+RELIABILITY_IT = {"established": "consolidata", "probable": "probabile", "disputed": "controversa", "unverified": "non verificata"}
+
+
+# Termini italiani → categorie delle serie (i nomi delle serie delle fonti sono spesso in inglese).
+CATEGORY_TERMS = {
+    "inflation": {"inflazione", "prezzi", "inflation", "cpi", "hicp"},
+    "public_debt": {"debito", "debt"},
+    "gdp": {"pil", "crescita", "gdp", "prodotto"},
+    "unemployment": {"disoccupazione", "unemployment", "lavoro"},
+    "rates": {"tassi", "tasso", "interesse", "rates", "rendimento"},
+    "precious_metals": {"oro", "gold", "argento"},
+    "trade_balance": {"commercial", "bilancia", "export", "import", "trade"},
+    "fx": {"cambio", "valuta", "valute", "dollaro", "euro", "lira"},
+}
+COUNTRY_TERMS = {"italia": "italy", "germania": "germany", "francia": "france", "spagna": "spain", "stati": "united states",
+                 "regno": "united kingdom", "giappone": "japan", "cina": "china"}
+
+
 class StepLimitExceeded(Exception):
     pass
 
@@ -115,14 +133,22 @@ class Runner:
             verified = sum(1 for link in e.source_links if (src := self.db.get(Source, link.source_id)) and src.verification_status in ("verified_user", "verified_registry"))
             text = f"{e.title} ({e.start_year}{'–' + str(e.end_year) if e.end_year and e.end_year != e.start_year else ''}). {e.description} Cause: {e.causes} Implicazioni economiche: {e.economic_implications}"
             evidence.append({"kind": "event", "label": f"Evento: {e.title}", "text": text[:1500], "ref": {"event_id": e.id},
-                             "source": f"Archivio storico NEXUS — attendibilità {e.reliability}, {n_src} fonti ({verified} verificate)",
+                             "source": f"Archivio storico NEXUS — attendibilità {RELIABILITY_IT.get(e.reliability, e.reliability)}, {n_src} fonti ({verified} verificate)",
                              "reliability": e.reliability, "verified_sources": verified, "injection_flag": False})
         # Serie: selezionate esplicitamente o con nome pertinente; statistiche calcolate localmente.
         ids = self.run.options.get("series_ids") or []
         candidates = list(self.db.scalars(select(Series).where(Series.owner_id == self.user.id)))
         chosen = [s for s in candidates if s.id in ids]
         if not ids:
-            chosen = [s for s in candidates if tset & set(terms(s.name + " " + s.category))][:4]
+            cats = {c for c, words in CATEGORY_TERMS.items() if tset & words}
+            countries = {COUNTRY_TERMS[t] for t in tset if t in COUNTRY_TERMS}
+
+            def relevant(s: Series) -> bool:
+                name = s.name.lower() + " " + s.country.lower()
+                topical = s.category in cats or bool(tset & set(terms(s.name)))
+                return topical and (not countries or any(c in name for c in countries))
+
+            chosen = [s for s in candidates if relevant(s)][:4]
         for s in chosen:
             evidence.append(self._series_evidence(s))
         for i, ev in enumerate(evidence, start=1):

@@ -47,6 +47,7 @@ class SystemStatusOut(BaseModel):
     ai_provider: AIProviderOut
     ai_providers: list[AIProviderOut]
     server_time: UTCDateTime
+    auth_mode: str = "local"
 
 
 class UserOut(ORMModel):
@@ -94,6 +95,8 @@ class ProjectOut(ORMModel):
     description: str
     status: ProjectStatus
     is_demo: bool
+    owner_id: int
+    my_role: Literal["owner", "editor", "viewer"] = "owner"
     created_at: UTCDateTime
     updated_at: UTCDateTime
 

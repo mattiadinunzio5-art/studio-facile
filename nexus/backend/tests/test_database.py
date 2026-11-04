@@ -31,6 +31,8 @@ EXPECTED_TABLES = {
     "report_sections",
     "notes",
     "briefings",
+    "auth_sessions",
+    "project_members",
 }
 
 

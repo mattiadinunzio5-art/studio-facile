@@ -20,9 +20,12 @@ import { SearchPage } from './pages/Search';
 import { SettingsPage } from './pages/Settings';
 import { SourcesPage } from './pages/Sources';
 import { AppStateProvider } from './state/AppState';
+import { AuthProvider } from './state/Auth';
+import { AccountPage, AdminPage } from './pages/Account';
 
 export function App() {
   return (
+    <AuthProvider>
     <AppStateProvider>
       <Routes>
         <Route element={<AppShell />}>
@@ -42,6 +45,8 @@ export function App() {
           <Route path="history/events/:eventId" element={<EventDetailPage />} />
           <Route path="time-machine" element={<TimeMachinePage />} />
           <Route path="graph" element={<GraphPage />} />
+          <Route path="account" element={<AccountPage />} />
+          <Route path="admin" element={<AdminPage />} />
           <Route path="studio" element={<StudioPage />} />
           <Route path="studio/reports/:reportId" element={<ReportEditorPage />} />
           <Route path="briefing" element={<BriefingPage />} />
@@ -56,5 +61,6 @@ export function App() {
         </Route>
       </Routes>
     </AppStateProvider>
+    </AuthProvider>
   );
 }

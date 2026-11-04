@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from .routes import (
     activity,
     agents,
+    auth,
     connectors,
     credentials,
     finance,
@@ -22,5 +23,5 @@ from .routes import (
 )
 
 api_router = APIRouter(prefix="/api")
-for r in (system, modules, dashboard, projects, activity, notifications, connectors, search, documents, sources, research, history, graph, finance, credentials, agents, lab, studio):
+for r in (system, modules, dashboard, projects, activity, notifications, connectors, search, documents, sources, research, history, graph, finance, credentials, agents, lab, studio, auth):
     api_router.include_router(r.router)

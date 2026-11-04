@@ -19,10 +19,10 @@ VERIFIED = ("verified_user", "verified_registry")
 
 
 def _project(db: Session, user: User, project_id: int | None) -> None:
-    if project_id is not None:
-        p = db.get(Project, project_id)
-        if p is None or p.owner_id != user.id:
-            raise ValidationFailedError("Progetto inesistente.")
+    from . import sharing
+
+    if project_id is not None and sharing.RANK.get(sharing.role_in(db, user, project_id) or "", 0) < sharing.RANK["editor"]:
+        raise ValidationFailedError("Progetto inesistente o senza permessi di modifica.")
 
 
 def create_report(db: Session, user: User, data: ReportCreate, origin: str = "manual") -> Report:
@@ -38,17 +38,37 @@ def create_report(db: Session, user: User, data: ReportCreate, origin: str = "ma
 
 
 def list_reports(db: Session, user: User, project_id: int | None = None) -> list[Report]:
-    stmt = select(Report).where(Report.owner_id == user.id)
+    from . import sharing
+
+    shared = sharing.shared_project_ids(db, user)
+    stmt = select(Report).where((Report.owner_id == user.id) | (Report.project_id.in_(shared)))
     if project_id is not None:
         stmt = stmt.where(Report.project_id == project_id)
     return list(db.scalars(stmt.order_by(Report.updated_at.desc())))
 
 
-def get_report(db: Session, user: User, report_id: int) -> Report:
+def get_report(db: Session, user: User, report_id: int, minimum: str = "viewer") -> Report:
+    """Accesso: proprietario, oppure membro del progetto del rapporto con il ruolo minimo richiesto."""
+    from . import sharing
+
     r = db.get(Report, report_id)
-    if r is None or r.owner_id != user.id:
+    if r is None:
         raise NotFoundError("Rapporto non trovato.")
+    if r.owner_id == user.id:
+        return r
+    role = sharing.role_in(db, user, r.project_id)
+    if role is None:
+        raise NotFoundError("Rapporto non trovato.")
+    if sharing.RANK[role] < sharing.RANK[minimum]:
+        from .auth import ForbiddenError
+
+        raise ForbiddenError("Permessi insufficienti: accesso in sola lettura.")
     return r
+
+
+def _owner(db: Session, r: Report) -> User:
+    # Fonti, serie e simulazioni di un rapporto appartengono al suo proprietario.
+    return db.get(User, r.owner_id)
 
 
 def _to_draft(r: Report) -> None:
@@ -57,13 +77,13 @@ def _to_draft(r: Report) -> None:
 
 
 def update_report(db: Session, user: User, report_id: int, data: ReportUpdate) -> Report:
-    r = get_report(db, user, report_id)
+    r = get_report(db, user, report_id, "editor")
     changes = data.model_dump(exclude_unset=True)
     if "project_id" in changes:
         _project(db, user, changes["project_id"])
     if changes.get("source_ids") is not None:
         ids = list(dict.fromkeys(changes["source_ids"]))
-        found = set(db.scalars(select(Source.id).where(Source.owner_id == user.id, Source.id.in_(ids))))
+        found = set(db.scalars(select(Source.id).where(Source.owner_id == r.owner_id, Source.id.in_(ids))))
         if set(ids) - found:
             raise ValidationFailedError(f"Fonti inesistenti: {sorted(set(ids) - found)}")
         changes["source_ids"] = ids
@@ -76,7 +96,7 @@ def update_report(db: Session, user: User, report_id: int, data: ReportUpdate) -
 
 
 def update_section(db: Session, user: User, report_id: int, section_id: int, data: SectionIn) -> Report:
-    r = get_report(db, user, report_id)
+    r = get_report(db, user, report_id, "editor")
     sec = next((s for s in r.sections if s.id == section_id), None)
     if sec is None:
         raise NotFoundError("Sezione non trovata.")
@@ -95,7 +115,7 @@ def update_section(db: Session, user: User, report_id: int, section_id: int, dat
 
 
 def add_chapter(db: Session, user: User, report_id: int, data: ChapterIn) -> Report:
-    r = get_report(db, user, report_id)
+    r = get_report(db, user, report_id, "editor")
     anchor = next((s for s in r.sections if s.key == data.after_key or str(s.id) == data.after_key), None)
     if anchor is None:
         raise ValidationFailedError("Sezione di riferimento inesistente.")
@@ -111,7 +131,7 @@ def add_chapter(db: Session, user: User, report_id: int, data: ChapterIn) -> Rep
 
 
 def delete_chapter(db: Session, user: User, report_id: int, section_id: int) -> Report:
-    r = get_report(db, user, report_id)
+    r = get_report(db, user, report_id, "editor")
     sec = next((s for s in r.sections if s.id == section_id), None)
     if sec is None or sec.key != "chapter":
         raise ValidationFailedError("Si possono eliminare solo i capitoli aggiuntivi, non le sezioni obbligatorie.")
@@ -125,7 +145,7 @@ def delete_chapter(db: Session, user: User, report_id: int, section_id: int) -> 
 
 
 def move_chapter(db: Session, user: User, report_id: int, section_id: int, direction: int) -> Report:
-    r = get_report(db, user, report_id)
+    r = get_report(db, user, report_id, "editor")
     ordered = sorted(r.sections, key=lambda s: s.ordinal)
     i = next((k for k, s in enumerate(ordered) if s.id == section_id), None)
     if i is None or ordered[i].key != "chapter":
@@ -141,6 +161,10 @@ def move_chapter(db: Session, user: User, report_id: int, section_id: int, direc
 
 def delete_report(db: Session, user: User, report_id: int, confirm: bool) -> None:
     r = get_report(db, user, report_id)
+    if r.owner_id != user.id:
+        from .auth import ForbiddenError
+
+        raise ForbiddenError("Solo il proprietario può eliminare il rapporto.")
     if not confirm:
         raise ConfirmationRequiredError("Eliminare un rapporto richiede conferma (confirm=true).")
     db.delete(r)
@@ -163,6 +187,7 @@ def _bibliography(db: Session, user: User, r: Report) -> tuple[list[Source], lis
 
 def check(db: Session, user: User, report_id: int) -> ReportCheck:
     r = get_report(db, user, report_id)
+    user = _owner(db, r)
     bib, invalid, numbering = _bibliography(db, user, r)
     empty = [s.title for s in r.sections if s.key != "chapter" and not s.body.strip()]
     unverified = [{"id": s.id, "citation": format_citation(s), "status": VERIFICATION_LABEL[s.verification_status]} for s in bib if s.verification_status not in VERIFIED]
@@ -188,7 +213,7 @@ def _owned(db: Session, model, oid: int, user: User):
 
 
 def set_status(db: Session, user: User, report_id: int, status: str) -> Report:
-    r = get_report(db, user, report_id)
+    r = get_report(db, user, report_id, "editor")
     if status == "approved":
         c = check(db, user, report_id)
         if not c.ready:
@@ -219,16 +244,16 @@ def _figure(db: Session, user: User, e: dict) -> export.Figure:
     res = sim.result.get("results", {})
     label = sim.result.get("label", "")
     png = None
-    if "fan" in res:
-        fan = res["fan"]
-        png = charts.line_chart(sim.title, [str(f["t"]) for f in fan], {"95° perc.": [f["p95"] for f in fan], "Mediana": [f["p50"] for f in fan], "5° perc.": [f["p5"] for f in fan]})
-    elif sim.kind == "debt":
+    if sim.kind == "debt":
         series = {"Base": res["baseline"]["debt"]}
         if "rate_shock" in res:
             series["Shock tassi"] = res["rate_shock"]["debt"]
         if "crisis" in res:
             series["Crisi"] = res["crisis"]["debt"]
         png = charts.line_chart(sim.title, [str(y) for y in res["years"]], series, "% PIL")
+    elif "fan" in res:
+        fan = res["fan"]
+        png = charts.line_chart(sim.title, [str(f["t"]) for f in fan], {"95° perc.": [f["p95"] for f in fan], "Mediana": [f["p50"] for f in fan], "5° perc.": [f["p5"] for f in fan]})
     elif sim.kind == "backtest":
         eq = res["equity"]
         png = charts.line_chart(sim.title, [x["date"][:7] for x in eq], {"Strategia": [x["strategy"] for x in eq], "Buy & hold": [x["benchmark"] for x in eq]})
@@ -237,6 +262,7 @@ def _figure(db: Session, user: User, e: dict) -> export.Figure:
 
 def build_view(db: Session, user: User, report_id: int) -> export.ReportView:
     r = get_report(db, user, report_id)
+    user = _owner(db, r)
     bib, invalid, numbering = _bibliography(db, user, r)
     sections = []
     for s in sorted(r.sections, key=lambda x: x.ordinal):
@@ -338,9 +364,13 @@ def _note_refs(db: Session, user: User, data: NoteIn) -> None:
 
 
 def list_notes(db: Session, user: User, project_id: int | None = None) -> list[Note]:
-    stmt = select(Note).where(Note.owner_id == user.id)
+    from . import sharing
+
     if project_id is not None:
-        stmt = stmt.where(Note.project_id == project_id)
+        sharing.require(db, user, project_id, "viewer")
+        stmt = select(Note).where(Note.project_id == project_id)
+    else:
+        stmt = select(Note).where(Note.owner_id == user.id)
     return list(db.scalars(stmt.order_by(Note.updated_at.desc())))
 
 

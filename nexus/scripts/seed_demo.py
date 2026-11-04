@@ -51,5 +51,44 @@ def main() -> None:
     print(f"Progetti DEMO creati: {created}")
 
 
+
+
+# --- Eventi dimostrativi (Fase 3) ------------------------------------------------------------
+# Fatti storici noti, ma inseriti SENZA fonti: restano «non verificati» e marcati DEMO finché
+# l'utente non collega e verifica le fonti nella bibliografia.
+DEMO_EVENTS = [
+    dict(title="[DEMO] Crollo di Wall Street", start_year=1929, start_month=10, start_day=24, end_year=1929, end_month=10, end_day=29,
+         countries=["Stati Uniti"], categories=["financial_crisis"], description="Crollo della borsa di New York nell'ottobre 1929."),
+    dict(title="[DEMO] Conferenza di Bretton Woods", start_year=1944, start_month=7, start_day=1, end_year=1944, end_month=7, end_day=22,
+         countries=["Stati Uniti"], categories=["monetary"], description="Conferenza monetaria e finanziaria delle Nazioni Unite."),
+    dict(title="[DEMO] Sospensione della convertibilità del dollaro in oro", start_year=1971, start_month=8, start_day=15,
+         countries=["Stati Uniti"], categories=["monetary"], description="Annuncio della sospensione della convertibilità del dollaro in oro."),
+    dict(title="[DEMO] Introduzione dell'euro come moneta scritturale", start_year=1999, start_month=1, start_day=1,
+         countries=["Unione europea"], categories=["monetary"], description="Avvio dell'euro per le transazioni non in contanti."),
+    dict(title="[DEMO] Fallimento di Lehman Brothers", start_year=2008, start_month=9, start_day=15,
+         countries=["Stati Uniti"], categories=["financial_crisis", "banking"], description="Istanza di fallimento della banca d'investimento."),
+]
+
+
+def seed_events() -> None:
+    from nexus.api.schemas_history import EventIn
+    from nexus.models import HistoricalEvent
+    from nexus.services.history import create_event
+
+    settings = get_settings()
+    database = Database(settings.database_url)
+    with database.session_factory() as db:
+        user = bootstrap(db)
+        existing = set(db.scalars(select(HistoricalEvent.title).where(HistoricalEvent.owner_id == user.id)))
+        n = 0
+        for e in DEMO_EVENTS:
+            if e["title"] not in existing:
+                create_event(db, user, EventIn(**e, reliability="unverified",
+                                               reliability_note="Scheda dimostrativa senza fonti: verificare prima dell'uso."), is_demo=True)
+                n += 1
+    print(f"Eventi DEMO creati: {n}")
+
+
 if __name__ == "__main__":
     main()
+    seed_events()

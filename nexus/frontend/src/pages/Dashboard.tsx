@@ -38,10 +38,12 @@ export function SectionView({ section, empty }: { section: DataSection | Unavail
       {section.items.length === 0 ? <EmptyState>{empty ?? 'Nessun elemento.'}</EmptyState> : (
         <ul className="space-y-1.5">
           {section.items.map((i) => (
-            <li key={i.id} className="flex items-center gap-2 text-sm">
-              <Link to={i.url} className="min-w-0 flex-1 truncate text-steel-300 hover:text-paper">{i.title}</Link>
-              {i.is_demo && <DemoBadge />}
-              <span className="shrink-0 text-[11px] text-steel-500">{[i.subtitle, i.date].filter(Boolean).join(' · ')}</span>
+            <li key={i.id} className="text-sm">
+              <div className="flex min-w-0 items-center gap-2">
+                <Link to={i.url} className="min-w-0 flex-1 truncate text-steel-300 hover:text-paper">{i.title}</Link>
+                {i.is_demo && <DemoBadge />}
+              </div>
+              <p className="break-words text-[11px] text-steel-500">{[i.subtitle, i.date].filter(Boolean).join(' · ')}</p>
             </li>
           ))}
         </ul>
@@ -109,8 +111,8 @@ function renderWidget(id: WidgetId, d: DashboardData, onRead: (nid: number) => v
               <Link to={`/search?q=${encodeURIComponent(s.query)}`} className="min-w-0 flex-1 truncate text-steel-300 hover:text-paper">
                 {s.query}
               </Link>
-              <span className="shrink-0 text-[11px] text-steel-500">
-                {s.results_count} risultati · {formatDateTime(s.created_at)}
+              <span className="shrink-0 whitespace-nowrap text-[11px] text-steel-500">
+                {s.results_count} ris. · {formatDateTime(s.created_at)}
               </span>
             </li>
           ))}

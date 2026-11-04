@@ -21,6 +21,8 @@ export interface Project {
   description: string;
   status: ProjectStatus;
   is_demo: boolean;
+  owner_id?: number;
+  my_role?: 'owner' | 'editor' | 'viewer';
   created_at: string;
   updated_at: string;
 }
@@ -103,6 +105,7 @@ export interface SystemStatus {
   ai_provider: AIProvider;
   ai_providers: AIProvider[];
   server_time: string;
+  auth_mode?: 'local' | 'multi';
 }
 
 export const WIDGET_IDS = [
@@ -612,3 +615,10 @@ export interface NoteItem { id: number; title: string; body: string; project_id:
 export interface BriefingItem { title: string; date?: string | null; source?: string; value?: number | null; unit?: string; flags?: string[]; url?: string; detail?: string; kind?: string; reason?: string; reliability?: string; previous?: { value: number; date: string } }
 export interface BriefingSection { key: string; title: string; items: BriefingItem[]; empty_reason: string | null }
 export interface Briefing { id: number; trigger: string; created_at: string; content: { date: string; generated_at: string; sections: BriefingSection[]; refresh: { series: string; status: string }[]; notes: string[] } }
+
+// --- Fase 8: Business ------------------------------------------------------------------------
+
+export interface User { id: number; email: string; display_name: string; role: string; plan: string; is_local: boolean }
+export interface Plan { id: string; name: string; price_note: string; max_projects: number | null; max_documents: number | null; max_storage_mb: number | null; max_series: number | null; ai_runs_per_day: number | null }
+export interface AdminUser { id: number; email: string; display_name: string; role: string; plan: string; is_active: boolean; is_local: boolean; created_at: string; last_login_at: string | null; usage: Record<string, number> }
+export interface Member { user_id: number; email: string; display_name: string; role: 'owner' | 'editor' | 'viewer' }

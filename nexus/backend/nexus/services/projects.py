@@ -11,8 +11,11 @@ from ..models import Project, User
 from . import activity
 
 
-def list_projects(db: Session, user: User, status: str | None = None) -> list[Project]:
-    stmt = select(Project).where(Project.owner_id == user.id)
+def list_projects(db: Session, user: User, status: str | None = None, include_shared: bool = True) -> list[Project]:
+    from . import sharing
+
+    ids = sharing.shared_project_ids(db, user) if include_shared else []
+    stmt = select(Project).where((Project.owner_id == user.id) | (Project.id.in_(ids)))
     if status:
         stmt = stmt.where(Project.status == status)
     return list(db.scalars(stmt.order_by(Project.updated_at.desc(), Project.id.desc())))
@@ -27,15 +30,18 @@ def count_by_status(db: Session, user: User) -> dict[str, int]:
     return {status: count for status, count in rows}
 
 
-def get_project(db: Session, user: User, project_id: int) -> Project:
-    project = db.get(Project, project_id)
-    if project is None or project.owner_id != user.id:
-        # Stessa risposta per "inesistente" e "di un altro utente": nessuna fuga di informazioni.
-        raise NotFoundError("Progetto non trovato.")
+def get_project(db: Session, user: User, project_id: int, minimum: str = "viewer") -> Project:
+    from . import sharing
+
+    # Stessa risposta per "inesistente" e "di un altro utente": nessuna fuga di informazioni.
+    project, _ = sharing.require(db, user, project_id, minimum)
     return project
 
 
 def create_project(db: Session, user: User, data: ProjectCreate, is_demo: bool = False) -> Project:
+    from ..core import plans
+
+    plans.enforce(db, user, "projects")
     project = Project(
         owner_id=user.id, title=data.title, description=data.description, is_demo=is_demo
     )
@@ -56,7 +62,7 @@ def create_project(db: Session, user: User, data: ProjectCreate, is_demo: bool =
 
 
 def update_project(db: Session, user: User, project_id: int, data: ProjectUpdate) -> Project:
-    project = get_project(db, user, project_id)
+    project = get_project(db, user, project_id, "editor")
     changes = data.model_dump(exclude_unset=True, exclude_none=True)
     if not changes:
         return project
@@ -82,7 +88,7 @@ def update_project(db: Session, user: User, project_id: int, data: ProjectUpdate
 
 
 def delete_project(db: Session, user: User, project_id: int, confirm: bool) -> None:
-    project = get_project(db, user, project_id)
+    project = get_project(db, user, project_id, "owner")
     if not confirm:
         raise ConfirmationRequiredError(
             "L'eliminazione è irreversibile e richiede conferma esplicita (confirm=true).",

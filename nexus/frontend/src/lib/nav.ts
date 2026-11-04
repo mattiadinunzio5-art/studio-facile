@@ -41,7 +41,7 @@ export const MODULE_NAV: NavItem[] = [
   { to: '/war-room', moduleId: 'war-room', label: 'Research War Room', icon: Swords, code: 'E' },
   { to: '/lab', moduleId: 'economic-lab', label: 'Economic Laboratory', icon: FlaskConical, code: 'F' },
   { to: '/studio', moduleId: 'research-studio', label: 'Research Studio', icon: BookOpenText, code: 'G' },
-  { to: '/modules/business', moduleId: 'business', label: 'NEXUS Business', icon: Briefcase, code: 'H', phase: 8 },
+  { to: '/account', moduleId: 'business', label: 'NEXUS Business', icon: Briefcase, code: 'H' },
 ];
 
 export const MAIN_NAV: NavItem[] = [

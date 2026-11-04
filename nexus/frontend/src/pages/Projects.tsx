@@ -1,6 +1,10 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Archive, ArchiveRestore, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Archive, ArchiveRestore, Pencil, Plus, Share2, Trash2 } from 'lucide-react';
+import { useAuth } from '../state/Auth';
+import { Badge } from '../components/ui/Badge';
+import { Input, Select } from '../components/ui/Form';
+import { errorText } from '../lib/forms';
 import { api, ApiError } from '../api/client';
 import type { Project, ProjectStatus } from '../api/types';
 import { DemoBadge } from '../components/ui/Badge';
@@ -68,7 +72,38 @@ export function ProjectForm({
   );
 }
 
+function SharePanel({ projectId }: { projectId: number }) {
+  const members = useAsync(() => api.members(projectId), [projectId]);
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState('viewer');
+  const [confirming, setConfirming] = useState(false);
+  const [err, setErr] = useState<string>();
+  return (
+    <div className="mt-3 rounded-md border border-ink-700 p-3" data-testid="share-panel">
+      <ul className="mb-2 space-y-1 text-sm">
+        {members.data?.map((m) => (
+          <li key={m.user_id} className="flex items-center gap-2 text-steel-300">
+            <span className="min-w-0 flex-1 truncate">{m.display_name} · {m.email}</span><Badge>{m.role}</Badge>
+            {m.role !== 'owner' && <button className="text-[11px] text-steel-500 hover:text-bad" onClick={async () => { await api.removeMember(projectId, m.user_id); await members.reload(); }}>rimuovi</button>}
+          </li>
+        ))}
+      </ul>
+      <div className="flex flex-wrap gap-2">
+        <Input aria-label="Email da invitare" placeholder="email@esempio.org" className="min-w-48 flex-1" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <Select aria-label="Ruolo" className="w-auto" value={role} onChange={(e) => setRole(e.target.value)}><option value="viewer">Lettura</option><option value="editor">Modifica</option></Select>
+        <Button disabled={!email.trim()} onClick={() => setConfirming(true)}>Condividi</Button>
+      </div>
+      {err && <p role="alert" className="mt-2 text-sm text-bad">{err}</p>}
+      <ConfirmDialog open={confirming} title="Condividere il progetto?" message={`${email} potrà ${role === 'editor' ? 'leggere e modificare' : 'leggere'} rapporti e appunti di questo progetto. I documenti dell'archivio restano privati.`}
+        confirmLabel="Condividi" onCancel={() => setConfirming(false)}
+        onConfirm={async () => { setConfirming(false); setErr(undefined); try { await api.addMember(projectId, email.trim(), role); setEmail(''); await members.reload(); } catch (e) { setErr(errorText(e)); } }} />
+    </div>
+  );
+}
+
 export function ProjectsPage() {
+  const { mode } = useAuth();
+  const [sharing, setSharing] = useState<number>();
   const [params, setParams] = useSearchParams();
   const [filter, setFilter] = useState<ProjectStatus>('active');
   const [creating, setCreating] = useState(params.get('new') === '1');
@@ -175,6 +210,7 @@ export function ProjectsPage() {
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="min-w-0 break-words font-medium text-paper">{p.title}</h2>
                       {p.is_demo && <DemoBadge />}
+                      {p.my_role && p.my_role !== 'owner' && <Badge tone="gold">Condiviso con te · {p.my_role === 'editor' ? 'modifica' : 'lettura'}</Badge>}
                     </div>
                     {p.description && <p className="mt-1 whitespace-pre-line text-sm text-steel-400">{p.description}</p>}
                     <p className="mt-2 text-[11px] text-steel-500">
@@ -182,6 +218,9 @@ export function ProjectsPage() {
                     </p>
                   </div>
                   <div className="flex shrink-0 gap-1">
+                    {mode === 'multi' && (p.my_role ?? 'owner') === 'owner' && (
+                      <Button variant="ghost" className="px-2" onClick={() => setSharing(sharing === p.id ? undefined : p.id)} aria-label={`Condividi ${p.title}`}><Share2 className="size-4" /></Button>
+                    )}
                     <Button variant="ghost" className="px-2" onClick={() => setEditingId(p.id)} aria-label={`Modifica ${p.title}`}>
                       <Pencil className="size-4" />
                     </Button>
@@ -198,6 +237,7 @@ export function ProjectsPage() {
                       <Trash2 className="size-4" />
                     </Button>
                   </div>
+                  {sharing === p.id && <div className="basis-full"><SharePanel projectId={p.id} /></div>}
                 </div>
               )}
             </li>

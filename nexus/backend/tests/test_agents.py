@@ -259,3 +259,12 @@ def test_anthropic_client_defaults_and_refusal():
     refusing = SimpleNamespace(beta=SimpleNamespace(messages=FakeSDKMessages("refusal")), messages=None)
     with pytest.raises(llm.ProviderError, match="rifiutato"):
         llm.AnthropicClient("", sdk_client=refusing).complete("s", "u")
+
+
+def test_italian_question_matches_english_series_names(client):
+    csv = "anno,valore\n1970,5\n1971,4.8\n1972,5.7\n1973,10.8\n"
+    for name in ("Inflation, consumer prices (annual %) — Italy", "Inflation, consumer prices (annual %) — France"):
+        client.post("/api/finance/series/upload", files={"file": ("i.csv", csv.encode())}, data={"name": name, "source_label": "Test", "category": "inflation"})
+    run = _run(client, "Come cambiò l'inflazione in Italia negli anni Settanta?")
+    labels = [e["label"] for e in run["evidence"] if e["kind"] == "series"]
+    assert labels == ["Serie: Inflation, consumer prices (annual %) — Italy"]

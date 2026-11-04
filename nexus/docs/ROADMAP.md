@@ -1,36 +1,33 @@
-# Roadmap e stato delle fasi
+# Roadmap e stato
 
 | Fase | Contenuto | Stato |
 |---|---|---|
-| 1 | Foundation: architettura, DB, backend, frontend, dashboard | ✅ completata (in attesa di approvazione) |
-| 2 | Research Core: import documenti, estrazione testo, ricerca, citazioni, RAG | ⏳ non iniziata |
-| 3 | Historical Intelligence, Time Machine, Knowledge Graph | ⏳ |
-| 4 | Financial Intelligence: connettori, indicatori, grafici, analisi | ⏳ |
-| 5 | AI Research / War Room: agenti, planner, controanalisi, approvazione | ⏳ |
-| 6 | Economic Lab: simulazioni, backtesting, scenari | ⏳ |
-| 7 | Research Studio: rapporti, esportazione PDF/DOCX | ⏳ |
-| 8 | Business: account, permessi, preparazione SaaS | ⏳ |
+| 1 | Foundation: architettura, DB, backend, frontend, dashboard | ✅ |
+| 2 | Research Core: import, estrazione, ricerca BM25+semantica, citazioni, risposte | ✅ |
+| 3 | Historical Intelligence, Time Machine, Knowledge Graph | ✅ |
+| 4 | Financial Intelligence: connettori, indicatori, grafici, analisi | ✅ |
+| 5 | AI Research / War Room: agenti, planner, controanalisi, sintesi, approvazione | ✅ |
+| 6 | Economic Lab: simulazioni, backtesting, modelli, scenari | ✅ |
+| 7 | Research Studio: rapporti, appunti, export PDF/DOCX, Daily Briefing | ✅ |
+| 8 | Business: account, permessi, piani, amministrazione | ✅ |
 
-## Fase 1 — funzionalità effettivamente completate
-- Backend FastAPI con API REST documentate (OpenAPI su `/docs`), errori uniformi, logging.
-- Database SQLite con migrazioni Alembic (predisposto per PostgreSQL).
-- Bootstrap automatico: migrazioni, utente locale, notifica di benvenuto.
-- Registro delle 8 aree con fase prevista e funzionalità pianificate.
-- Progetti di ricerca: crea, modifica, archivia/ripristina, elimina con conferma esplicita.
-- Registro attività di tutte le operazioni.
-- Notifiche: elenco, segna letta, segna tutte.
-- Ricerca globale testuale (progetti + catalogo moduli) con storico delle ricerche e
-  dichiarazione degli ambiti non ancora ricercabili.
-- Fonti: 8 connettori dichiarati con link ai termini d'uso; verifica reale di
-  raggiungibilità (HTTP, latenza, errore) con stato persistito.
-- Dashboard con 9 widget personalizzabili (ordine/visibilità salvati nel DB).
-- Pagina Sistema: stato DB, modalità AI, provider (nessuno attivo).
-- UI responsive (375 / 768 / 1440 px verificati), sidebar, ricerca, pannello contestuale.
-- Script: setup, avvio, test, dati DEMO etichettati, backup.
+Test automatici: 178 backend (pytest), 36 frontend (Vitest + Testing Library),
+typecheck TypeScript, E2E responsive su 25 pagine × 3 larghezze (Playwright).
 
-## Fase 1 — non incluso (per scelta di fase)
-- Nessun import di documenti, eventi, serie o grafici (fasi 2–4).
-- Nessun agente AI e nessuna configurazione di credenziali (Fase 5).
-- Nessuna autenticazione: utente locale unico, server su 127.0.0.1 (Fase 8).
-- Dashboard: personalizzazione di ordine e visibilità; non ancora ridimensionamento widget.
-- Cache e rate-limit dei connettori arriveranno con l'importazione dati (Fase 4).
+## Limiti noti e lavoro futuro (dichiarati, non simulati)
+- **Connettori**: IMF, OECD e BIS sono dichiarati ma non importano ancora dati.
+  FRED richiede una chiave gratuita dell'utente. Nessuna quotazione in tempo reale.
+- **Dati point-in-time**: le serie sono nella versione attuale (revisioni incluse);
+  Time Machine e backtest lo segnalano. Non esiste un archivio di vintage storici.
+- **Ricerca semantica**: predefinita LSA (scikit-learn). Gli embedding neurali
+  (sentence-transformers) sono opzionali e non sono stati scaricati nei test.
+- **OCR**: i PDF scansionati senza testo vengono rifiutati con messaggio esplicito.
+- **Provider AI**: testati con risposte simulate a livello HTTP/SDK; nessuna chiamata
+  reale a modelli a pagamento è stata eseguita durante lo sviluppo.
+- **Daily Briefing**: nessuna fonte di notizie correnti; la programmazione si fa con cron.
+- **Pagamenti**: solo interfaccia (`billing.PaymentProvider`); i piani li assegna un admin.
+- **Condivisione**: si condividono progetti, rapporti e appunti; i documenti dell'archivio
+  restano privati del proprietario. Nessun invio di email (inviti per account esistenti).
+- **Rate limit** dei login in memoria (per processo): con più processi serve un backend condiviso.
+- **PostgreSQL**: architettura predisposta (URL configurabile, migrazioni portabili, ricerca
+  testuale con fallback); l'indice full-text tsvector non è ancora implementato.

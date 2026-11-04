@@ -23,9 +23,10 @@ class InvalidStateError(NexusError):
 
 def create_run(db: Session, user: User, settings: Settings, data: RunCreate) -> ResearchRun:
     if data.project_id is not None:
-        p = db.get(Project, data.project_id)
-        if p is None or p.owner_id != user.id:
-            raise ValidationFailedError("Progetto inesistente.")
+        from . import sharing
+
+        if sharing.RANK.get(sharing.role_in(db, user, data.project_id) or "", 0) < sharing.RANK["editor"]:
+            raise ValidationFailedError("Progetto inesistente o senza permessi di modifica.")
     try:
         client = ai.client_for(db, user, settings)
     except llm.ProviderError as exc:

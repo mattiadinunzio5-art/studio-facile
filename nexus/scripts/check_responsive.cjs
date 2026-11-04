@@ -20,7 +20,7 @@ const VIEWPORTS = [
   { name: 'tablet', width: 768, height: 1024 },
   { name: 'desktop', width: 1440, height: 900 },
 ];
-const ROUTES = ['/', '/modules/historical', '/modules/financial', '/projects', '/sources', '/activity', '/notifications', '/settings', '/search?q=storia'];
+const ROUTES = ['/', '/briefing', '/documents', '/bibliography', '/research', '/history', '/history/events/2', '/time-machine?year=1972', '/graph', '/financial', '/financial/series/1', '/financial/compare', '/war-room', '/war-room/runs/1', '/lab', '/lab/simulations/1', '/studio', '/studio/reports/1', '/projects', '/sources', '/activity', '/notifications', '/settings', '/account', '/search?q=dollaro'];
 
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });
@@ -47,8 +47,8 @@ const ROUTES = ['/', '/modules/historical', '/modules/financial', '/projects', '
       if (m.docOverflow > 0) failures.push(`${tag}: overflow orizzontale documento ${m.docOverflow}px`);
       if (m.mainOverflow > 0) failures.push(`${tag}: overflow orizzontale main ${m.mainOverflow}px`);
       if (errors.length) failures.push(`${tag}: errori console: ${errors.join(' | ')}`);
-      if (route === '/' || route === '/projects') {
-        await page.screenshot({ path: path.join(OUT, `${vp.name}${route === '/' ? '-dashboard' : route.replace(/\//g, '-')}.png`), fullPage: true });
+      if (['/', '/financial/series/1', '/time-machine?year=1972', '/graph', '/war-room/runs/1', '/lab/simulations/1', '/studio/reports/1', '/briefing'].includes(route)) {
+        await page.screenshot({ path: path.join(OUT, `${vp.name}${route === '/' ? '-dashboard' : route.replace(/[^a-z0-9]+/gi, '-')}.png`), fullPage: true });
       }
       console.log(`ok  ${tag.padEnd(34)} h1="${m.h1}"`);
     }
@@ -56,7 +56,7 @@ const ROUTES = ['/', '/modules/historical', '/modules/financial', '/projects', '
       // Il menu mobile deve aprirsi e mostrare gli 8 moduli.
       await page.goto(BASE + '/', { waitUntil: 'networkidle' });
       await page.click('button[aria-label="Apri menu"]');
-      const visible = await page.locator('#nexus-sidebar a[href^="/modules/"]').evaluateAll((els) =>
+      const visible = await page.locator('#nexus-sidebar a[data-module]').evaluateAll((els) =>
         els.filter((e) => { const r = e.getBoundingClientRect(); return r.right > 0 && r.left < window.innerWidth; }).length,
       );
       if (visible !== 8) failures.push(`${vp.name}: menu mobile mostra ${visible}/8 moduli`);

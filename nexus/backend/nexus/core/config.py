@@ -51,6 +51,8 @@ class Settings(BaseSettings):
     # Autenticazione: "local" = utente unico locale; "multi" = account con login.
     auth_mode: Literal["local", "multi"] = "local"
     session_hours: int = 24 * 7
+    allow_registration: bool = True
+    cookie_secure: bool = False  # True dietro HTTPS in produzione
     # Limiti alle operazioni automatiche.
     max_agent_steps: int = 12
 

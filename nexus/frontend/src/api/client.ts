@@ -1,4 +1,8 @@
 import type {
+  AdminUser,
+  Member,
+  Plan,
+  User,
   Briefing,
   Embed,
   NoteItem,
@@ -70,10 +74,12 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     res = await fetch(BASE + path, {
       ...init,
       credentials: 'same-origin',
-      headers:
-        init.body && !(init.body instanceof FormData)
-          ? { 'Content-Type': 'application/json', ...init.headers }
-          : init.headers,
+      headers: {
+        // Intestazione richiesta dal backend per le modifiche autenticate via cookie (protezione CSRF).
+        'X-Nexus-Client': 'web',
+        ...(init.body && !(init.body instanceof FormData) ? { 'Content-Type': 'application/json' } : {}),
+        ...(init.headers as Record<string, string> | undefined),
+      },
     });
   } catch {
     throw new ApiError(0, 'network_error', 'Backend non raggiungibile. Verifica che il server NEXUS sia avviato.');
@@ -85,6 +91,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   } catch {
     /* risposta non JSON */
   }
+  if (res.status === 401 && typeof window !== 'undefined') window.dispatchEvent(new Event('nexus:unauthorized'));
   if (!res.ok) {
     const err = (body as { error?: { code?: string; message?: string; details?: unknown } } | null)?.error;
     throw new ApiError(res.status, err?.code ?? `http_${res.status}`, err?.message ?? `Errore HTTP ${res.status}`, err?.details);
@@ -210,6 +217,25 @@ export const api = {
   simulations: () => request<SimulationSummary[]>('/lab/simulations'),
   simulation: (id: number) => request<SimulationRun>(`/lab/simulations/${id}`),
   deleteSimulation: (id: number) => request<void>(`/lab/simulations/${id}?confirm=true`, { method: 'DELETE' }),
+
+  // Fase 8
+  authConfig: () => request<{ mode: 'local' | 'multi'; allow_registration: boolean }>('/auth/config'),
+  me: () => request<User>('/me'),
+  login: (email: string, password: string) => request<User>('/auth/login', json('POST', { email, password })),
+  register: (email: string, password: string, display_name: string) => request<User>('/auth/register', json('POST', { email, password, display_name })),
+  logout: () => request<void>('/auth/logout', { method: 'POST' }),
+  sessions: () => request<{ id: number; created_at: string; last_seen_at: string | null; user_agent: string; ip: string; current: boolean }[]>('/auth/sessions'),
+  revokeSession: (id: number) => request<void>(`/auth/sessions/${id}`, { method: 'DELETE' }),
+  changePassword: (current: string, next: string) => request<void>('/auth/password', json('POST', { current, new: next })),
+  updateProfile: (display_name: string) => request<User>('/me', json('PATCH', { display_name })),
+  usage: () => request<{ plan: Plan; usage: Record<string, number> }>('/me/usage'),
+  plans: () => request<{ plans: Plan[]; payments_enabled: boolean; note: string }>('/billing/plans'),
+  adminUsers: () => request<AdminUser[]>('/admin/users'),
+  adminUpdateUser: (id: number, data: Partial<Pick<AdminUser, 'role' | 'plan' | 'is_active'>>) => request<AdminUser>(`/admin/users/${id}`, json('PATCH', data)),
+  adminStats: () => request<Record<string, unknown>>('/admin/stats'),
+  members: (projectId: number) => request<Member[]>(`/projects/${projectId}/members`),
+  addMember: (projectId: number, email: string, role: string) => request<Member[]>(`/projects/${projectId}/members?confirm=true`, json('POST', { email, role })),
+  removeMember: (projectId: number, userId: number) => request<Member[]>(`/projects/${projectId}/members/${userId}`, { method: 'DELETE' }),
 
   // Fase 7
   reports: (project_id?: number) => request<ReportSummary[]>(`/reports${qs({ project_id })}`),

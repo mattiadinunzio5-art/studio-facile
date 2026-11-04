@@ -14,10 +14,12 @@ from .project import Project
 from .search import SearchQuery
 from .source import Source
 from .studio import Briefing, Note, Report, ReportSection
-from .user import User
+from .user import AuthSession, ProjectMember, User
 
 __all__ = [
     "ActivityLog",
+    "AuthSession",
+    "ProjectMember",
     "Briefing",
     "Note",
     "Report",

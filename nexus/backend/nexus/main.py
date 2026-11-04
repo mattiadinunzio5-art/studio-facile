@@ -9,7 +9,8 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from . import __version__
@@ -31,7 +32,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if settings.auto_migrate:
             upgrade_to_head(settings.database_url)
         with app.state.database.session_factory() as db:
-            bootstrap(db)
+            bootstrap(db, create_local_user=settings.auth_mode == "local")
         logger.info("NEXUS %s avviato (%s, db=%s)", __version__, settings.env, settings.database_label)
         yield
         app.state.database.engine.dispose()
@@ -48,9 +49,24 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
+        allow_credentials=True,
         allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE"],
-        allow_headers=["Content-Type"],
+        allow_headers=["Content-Type", "X-Nexus-Client", "Authorization"],
     )
+
+    @app.middleware("http")
+    async def security(request: Request, call_next):
+        # Protezione CSRF: le richieste che modificano dati e si autenticano con il cookie
+        # devono portare un'intestazione personalizzata (non inviabile da un sito terzo senza CORS).
+        if (request.method in ("POST", "PUT", "PATCH", "DELETE") and request.cookies.get("nexus_session")
+                and not request.headers.get("authorization") and request.headers.get("x-nexus-client") != "web"):
+            return JSONResponse(status_code=403, content={"error": {"code": "csrf", "message": "Richiesta non consentita (intestazione X-Nexus-Client mancante)."}})
+        response = await call_next(request)
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("Referrer-Policy", "no-referrer")
+        response.headers.setdefault("Cache-Control", "no-store")
+        return response
     register_exception_handlers(app)
     app.include_router(api_router)
     return app
